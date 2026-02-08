@@ -78,26 +78,34 @@ El .env NO se versiona (está en .gitignore).
 ```text
 world-forge-backend-tests/
 │
-├─ domains/                    # Dominio por feature (arquitectura vertical)
-│  ├─ health/
-│  │  ├─ health.feature        # Escenarios BDD
-│  │  ├─ health.steps.ts       # Step definitions
-│  │  └─ health.api.ts         # API Object (POM para backend)
+├─ domains/                           # Tests organizados por dominio (arquitectura vertical)
 │  │
-│  └─ character/               # (en progreso)
+│  ├─ health/                         # Health check (smoke test)
+│  │  ├─ health.feature               # Escenarios BDD
+│  │  ├─ health.steps.ts              # Step definitions
+│  │  └─ health.api.ts                # API Object (POM del endpoint /health)
+│  │
+│  └─ character/                      # Dominio Character
+│     ├─ character.api.ts             # API Object único para /characters
+│     ├─ character.context.ts         # Contexto compartido (APIRequestContext + CharacterApi)
+│     │
+│     └─ list/                        # Operación: listar personajes
+│        ├─ README.md                 # Definición de test cases (fuente de verdad)
+│        ├─ character-list.feature    # Scenarios BDD (TC-CHAR-LIST-XX)
+│        └─ character-list.steps.ts   # Step definitions
 │
 ├─ tests/
 │  └─ cucumber/
-│     └─ cucumber.spec.ts      # Runner Playwright → Cucumber
+│     └─ cucumber.spec.ts             # Runner Playwright → Cucumber
 │
 ├─ utils/
 │  └─ http/
-│     └─ apiContext.ts         # Factory de APIRequestContext (baseURL)
+│     └─ apiContext.ts                # Factory de APIRequestContext (baseURL, headers)
 │
-├─ test-data/                  # Payloads y data de negocio
+├─ test-data/                         # Payloads y data de negocio (futuro)
 │
 ├─ reports/
-│  └─ cucumber-report.html     # Reporte HTML de Cucumber
+│  └─ cucumber-report.html            # Reporte HTML generado por Cucumber
 │
 ├─ playwright.config.ts
 ├─ cucumber.config.js
@@ -178,3 +186,11 @@ Existe pero no es el principal (solo orquesta Cucumber).
 
 - Paso 1: Levanta el backend
 - Paso 2: Ejecuta los tests: ``npx playwright test``
+- Paso 3: Ejecutar tests directamente con Cucumber (modo debug / local): `npx cucumber-js --config cucumber.config.js --profile default`
+- Paso 4: Ejecutar un dominio específico (ejemplo: Character): `npx cucumber-js --config cucumber.config.js --profile default --tags "@character"`
+- Paso 5: Ejecutar una operación específica (ejemplo: Character List): `npx cucumber-js --config cucumber.config.js --profile default --tags "@character and @list"`
+- Paso 6: Ejecutar un test case específico (ejemplo: TC-CHAR-LIST-01): `npx cucumber-js --config cucumber.config.js --profile default --tags "@tc-char-list-01"`
+
+## 11: Revisar el reporte
+
+Después de la ejecución, el reporte HTML se genera automáticamente en: `reports/cucumber-report.html`
