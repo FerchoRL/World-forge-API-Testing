@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Proyecto de testing backend para la API de World-Forge.",
   "main": "index.js",
-  
   "directories": {
     "test": "tests"
   },
@@ -15,8 +14,12 @@
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
+    "@cucumber/cucumber": "^12.6.0",
+    "@cucumber/html-formatter": "^23.0.0",
     "@playwright/test": "^1.58.2",
     "@types/node": "^25.2.1",
-    "dotenv": "^17.2.4"
+    "dotenv": "^17.2.4",
+    "playwright": "^1.58.2",
+    "ts-node": "^10.9.2"
   }
 }
