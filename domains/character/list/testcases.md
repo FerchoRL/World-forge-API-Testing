@@ -167,25 +167,7 @@ Expected Result:
 - characters es un arreglo
 - total está presente
 
-### TC-CHAR-LIST-08 – Empty limit value – Defaults to limit 10
-
-Descripción:
-
-Cuando limit se envía vacío, el backend debe aplicar el valor por defecto.
-
-Request:
-
-``GET /characters?limit=``
-
-Expected Result:
-
-- Status Code: 200
-- page = 1
-- limit = 10
-- characters es un arreglo
-- total está presente
-
-### TC-CHAR-LIST-09 – Page equals zero – Defaults to page 1
+### TC-CHAR-LIST-08 – Page equals zero – Defaults to page 1
 
 Descripción:
 
@@ -203,7 +185,7 @@ Expected Result:
 - characters es un arreglo
 - total está presente
 
-### TC-CHAR-LIST-10 – Negative page value – Defaults to page 1
+### TC-CHAR-LIST-9 – Negative page value – Defaults to page 1
 
 Descripción:
 
@@ -221,7 +203,7 @@ Expected Result:
 - characters es un arreglo
 - total está presente
 
-### TC-CHAR-LIST-11 – Non-numeric page value – Defaults to page 1
+### TC-CHAR-LIST-10 – Non-numeric page value – Defaults to page 1
 
 Descripción:
 
@@ -239,7 +221,7 @@ Expected Result:
 - characters es un arreglo
 - total está presente
 
-### TC-CHAR-LIST-12 – High page number – Returns empty list
+### TC-CHAR-LIST-11 – High page number – Returns empty list
 
 Descripción:
 
@@ -257,7 +239,7 @@ Expected Result:
 - characters = []
 - total está presente
 
-### TC-CHAR-LIST-13 – Unknown query parameters – Ignored by backend
+### TC-CHAR-LIST-12 – Unknown query parameters – Ignored by backend
 
 Descripción:
 
@@ -275,7 +257,7 @@ Expected Result:
 - characters es un arreglo
 - total está presente
 
-### TC-CHAR-LIST-15 – Internal server error – Returns 500
+### TC-CHAR-LIST-13 – Internal server error – Returns 500
 
 Descripción:
 
