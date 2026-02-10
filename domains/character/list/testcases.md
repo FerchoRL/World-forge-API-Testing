@@ -271,3 +271,30 @@ Expected Result:
 
 - Status Code: 500
 - Response contiene un mensaje de error genérico
+
+### TC-CHAR-LIST-14 – Character list returns valid character contract
+
+Descripción:
+
+Cuando el endpoint de listado devuelve personajes, cada elemento del arreglo characters debe cumplir con la estructura completa del CharacterDTO, validando la presencia y tipo de todas sus propiedades obligatorias, y considerando notes como opcional
+
+Request:
+
+``GET /characters``
+
+Expected Result:
+
+- Status Code: 200
+- La respuesta contiene:
+  - characters (arreglo)
+  - page (number)
+  - limit (number)
+  - total (number)
+- Cada elemento en characters cumple con CharacterDTO:
+  - id: string
+  - name: string
+  - status: string
+  - categories: string[] (arreglo de strings)
+  - identity: string
+  - inspirations: string[] (arreglo de strings)
+  - notes (opcional): si existe, es string

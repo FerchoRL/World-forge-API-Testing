@@ -1,7 +1,17 @@
 import type { APIRequestContext, APIResponse } from '@playwright/test'
 
+export type CharacterDTO = {
+    id: string
+    name: string
+    status: string
+    categories: string[]
+    identity: string
+    inspirations: string[]
+    notes?: string
+}
+
 export type ListCharactersResponse = {
-    characters: unknown[]
+    characters: CharacterDTO[]
     page: number
     limit: number
     total: number
