@@ -104,6 +104,9 @@ Then("the response should match the character stored in the database", async () 
     throw new Error(`Character ${apiCharacter.id} not found in database`);
   }
 
+  console.log("API Character:", apiCharacter);
+  console.log("DB Character:", dbCharacter);
+
   expect(apiCharacter.id).toBe(dbCharacter._id);
   expect(apiCharacter.name).toBe(dbCharacter.name);
   expect(apiCharacter.status).toBe(dbCharacter.status);

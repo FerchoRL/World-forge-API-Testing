@@ -1,5 +1,26 @@
 import type { APIRequestContext, APIResponse } from '@playwright/test'
 
+/**
+ * ===============================
+ * Character — HTTP Layer (Automation)
+ * ===============================
+ *
+ * Este archivo define:
+ *
+ * 1) DTOs que representan exactamente el contrato HTTP expuesto por el backend.
+ * 2) El API Client (POM) para interactuar con /characters.
+ *
+ * Reglas importantes:
+ *
+ * - Los DTOs reflejan el contrato externo (API), NO el modelo interno del test.
+ * - No deben compararse directamente contra documentos de base de datos.
+ * - Las transformaciones API → Modelo interno se realizan en character.mapper.ts.
+ *
+ * Separación de responsabilidades:
+ *
+ * - character.api.ts     → Contrato HTTP + cliente
+ */
+
 export type CharacterDTO = {
     id: string
     name: string
@@ -20,17 +41,6 @@ export type ListCharactersResponse = {
 export type GetCharacterByIdResponse = {
     character: CharacterDTO
 }
-
-/**
- * CharacterApi
- *
- * Cliente de API (POM) para el dominio Character.
- * 
- * Responsabilidades:
- * - Centralizar llamadas HTTP relacionadas con /characters
- * - Evitar que los steps conozcan URLs o query params
- * - Facilitar reutilización en list, get-by-id, create, update, etc.
- */
 
 export class CharacterApi {
     // Contexto HTTP ya configurado (baseURL, headers)
