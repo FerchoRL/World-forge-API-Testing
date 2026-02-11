@@ -17,6 +17,10 @@ export type ListCharactersResponse = {
     total: number
 }
 
+export type GetCharacterByIdResponse = {
+    character: CharacterDTO
+}
+
 /**
  * CharacterApi
  *
@@ -44,5 +48,10 @@ export class CharacterApi {
             : `/characters`
 
         return this.api.get(url)
+    }
+
+    // Método para obtener un personaje por ID
+    async getCharacterById(id: string): Promise<APIResponse> {
+        return this.api.get(`/characters/${id}`)
     }
 }

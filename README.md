@@ -188,6 +188,7 @@ Existe pero no es el principal (solo orquesta Cucumber).
 - Paso 2: Ejecuta los tests: ``npx playwright test``
 - Paso 3: Ejecutar tests directamente con Cucumber (modo debug / local): `npx cucumber-js --config cucumber.config.js --profile default`
 - Paso 4: Ejecutar un dominio específico (ejemplo: Character): `npx cucumber-js --config cucumber.config.js --profile default --tags "@character"`
+- Paso4.1: Ejecutar un dominio skipeando test con determinado tag `npx cucumber-js --config cucumber.config.js --profile default --tags "@tc-char-get-01 and not @skip"`
 - Paso 5: Ejecutar una operación específica (ejemplo: Character List): `npx cucumber-js --config cucumber.config.js --profile default --tags "@character and @list"`
 - Paso 6: Ejecutar un test case específico (ejemplo: TC-CHAR-LIST-01): `npx cucumber-js --config cucumber.config.js --profile default --tags "@tc-char-list-01"`
 

@@ -20,6 +20,7 @@ export type CharacterContext = {
 }
 
 export async function createCharacterContext(): Promise<CharacterContext> {
+    //TODO: Implementar los fixtures de playwright
     const apiContext = await createApiContext()
     const characterApi = new CharacterApi(apiContext)
 
