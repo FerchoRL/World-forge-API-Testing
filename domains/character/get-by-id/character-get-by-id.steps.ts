@@ -8,6 +8,7 @@ import { VALID_STATUSES } from "../../../utils/domain/status";
 import { ctx } from "../character.common.steps";
 import { findCharacterById } from "../../../utils/db/repositories/character.db.repository";
 import { closeDatabase } from "../../../utils/db/mongo/mongo.client";
+import { mapApiToCharacterModel, mapMongoToCharacterModel } from "../character.mapper";
 
 let response: APIResponse;
 let responseBodyGetById: GetCharacterByIdResponse;
@@ -93,7 +94,7 @@ Then("the response should return a 400 validation error for id {word}", async (i
   expect(body.error).toContain(id);
 });
 
-Then("the response should match the character stored in the database", async () => {
+Then("the response should match the character stored in the database", async function () {
   const apiCharacter = responseBodyGetById.character;
 
   const dbCharacter = await findCharacterById(apiCharacter.id);
@@ -104,12 +105,53 @@ Then("the response should match the character stored in the database", async () 
     throw new Error(`Character ${apiCharacter.id} not found in database`);
   }
 
-  console.log("API Character:", apiCharacter);
-  console.log("DB Character:", dbCharacter);
+  const apiModel = mapApiToCharacterModel(apiCharacter);
+  const dbModel = mapMongoToCharacterModel(dbCharacter);
 
+  await this.attach(
+    JSON.stringify(
+      {
+        apiModel,
+        dbModel,
+      },
+      null,
+      2
+    ),
+    "application/json"
+  );
+
+  /**
+   * * 1️⃣ Validación estructural completa:
+    *    expect(apiModel).toEqual(dbModel)
+    *
+    *    Beneficios:
+    *    - Valida todo el objeto en una sola comparación.
+    *    - Escala automáticamente si se agregan nuevos campos al modelo.
+    *    - Mantiene el test limpio y desacoplado de DTO y Mongo.
+    *    - Ideal como validación principal.
+    *
+   */
+
+  expect(apiModel).toEqual(dbModel);
+
+  /**
+   * * 2️⃣ Validaciones campo por campo (opcional, para mayor claridad)
+      * Beneficios:
+      *    - Mensajes de error más granulares si algo falla.
+      *    - Permite detectar exactamente qué propiedad divergió.
+      *    - Útil durante refactors o debugging profundo.
+   */
+
+  // Core fields
   expect(apiCharacter.id).toBe(dbCharacter._id);
   expect(apiCharacter.name).toBe(dbCharacter.name);
   expect(apiCharacter.status).toBe(dbCharacter.status);
+  expect(apiCharacter.identity).toBe(dbCharacter.identity);
+  expect(apiCharacter.notes).toBe(dbCharacter.notes);
+
+  // Arrays (orden importa si tu backend no reordena)
+  expect(apiCharacter.categories).toEqual(dbCharacter.categories);
+  expect(apiCharacter.inspirations).toEqual(dbCharacter.inspirations);
 });
 
 

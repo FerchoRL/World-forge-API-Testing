@@ -1,10 +1,10 @@
-import { defineConfig, devices } from '@playwright/test'
-import dotenv from 'dotenv'
+import { defineConfig, devices } from "@playwright/test";
+import dotenv from "dotenv";
 
-dotenv.config()
+dotenv.config();
 
 export default defineConfig({
-  testDir: './tests',
+  testDir: "./tests",
 
   timeout: 30_000,
 
@@ -12,12 +12,15 @@ export default defineConfig({
 
   retries: 0,
 
-  reporter: [['html', { open: 'never' }]],
+  reporter: [
+    ["list"],
+    ["json", { outputFile: "test-results/playwright-report.json" }],
+  ],
 
   use: {
     baseURL: process.env.BASE_URL,
     extraHTTPHeaders: {
-      'Content-Type': 'application/json'
-    }
-  }
-})
+      "Content-Type": "application/json",
+    },
+  },
+});
