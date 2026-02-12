@@ -66,4 +66,12 @@ export class CharacterApi {
     async getCharacterById(id: string): Promise<APIResponse> {
         return this.api.get(`/characters/${id}`)
     }
+
+    // Metodo para crear un nuevo personaje
+    async createCharacter(character: Omit<CharacterDTO, 'id'>): Promise<APIResponse> {
+        return this.api.post('/characters', {
+            data: character,
+        })
+    }   
+
 }

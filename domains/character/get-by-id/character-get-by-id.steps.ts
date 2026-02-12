@@ -28,14 +28,17 @@ When("I request the character by id {word} and an internal error occurs", async 
 });
 
 // Validaciones para GET /characters/{id}
+
+Then("the character should be returned successfully", async () => {
+  expect(response.status()).toBe(200);
+  expect(responseBodyGetById.character).toBeDefined();
+});
+
+
 Then("the response should return a 500 internal server error", async () => {
   expect(response.status()).toBe(500);
   const body = await response.json();
   expect(body).toBeDefined();
-});
-
-Then("the response status should be {int}", async (status: number) => {
-  expect(response.status()).toBe(status);
 });
 
 Then("the response should contain a character", async () => {
