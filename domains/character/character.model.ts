@@ -11,11 +11,14 @@
  * - Representa la forma canónica contra la que comparamos datos
  */
 
+import { Status } from "../../contracts/common/status";
+import { CategoryName } from "./character.types";
+
 export type CharacterModel = {
   id: string;
   name: string;
-  status: string;
-  categories: string[];
+  status: Status;
+  categories: CategoryName[];
   identity: string;
   inspirations: string[];
   notes?: string;

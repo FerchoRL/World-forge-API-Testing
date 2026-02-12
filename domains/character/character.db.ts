@@ -14,11 +14,14 @@
  * Fuente de verdad: colección Mongo real.
  */
 
+import { Status } from "../../contracts/common/status";
+import { CategoryName } from "./character.types";
+
 export type CharacterMongoDocument = {
   _id: string; // char_xxxxx (no ObjectId)
   name: string;
-  status: string; // DRAFT | ACTIVE | ARCHIVED
-  categories: string[];
+  status: Status;
+  categories: CategoryName[];
   identity: string;
   inspirations: string[];
   notes?: string;

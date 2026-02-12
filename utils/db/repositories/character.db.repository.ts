@@ -1,5 +1,6 @@
 import { getDatabase } from "../mongo/mongo.client";
 import type { CharacterMongoDocument } from "../../../domains/character/character.db";
+import { Status } from "../../../contracts/common/status";
 
 /**
  * ===============================
@@ -26,7 +27,7 @@ export async function findCharacterById(
 }
 
 export async function findCharactersByStatus(
-  status: string
+  status: Status
 ): Promise<CharacterMongoDocument[]> {
   const db = await getDatabase();
 

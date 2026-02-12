@@ -33,7 +33,7 @@ Feature: Character – Get by ID (GET /characters/:id)
     When I request the character by id char_41x8tz7k and an internal error occurs
     Then the response should return a 500 internal server error
 
-  @tc-char-get-05 @db @skip
+  @tc-char-get-05 @db
   Scenario: TC-CHAR-GET-05 – Character data matches database record
     When I request the character by id char_41x8tz7k
     Then the response should match the character stored in the database

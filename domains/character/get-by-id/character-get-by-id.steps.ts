@@ -4,11 +4,12 @@ import {
   disposeCharacterContext,
 } from "../character.context";
 import type { GetCharacterByIdResponse } from "../character.api";
-import { VALID_STATUSES } from "../../../utils/domain/status";
+import { VALID_STATUSES } from "../../../contracts/common/status";
 import { ctx } from "../character.common.steps";
 import { findCharacterById } from "../../../utils/db/repositories/character.db.repository";
 import { closeDatabase } from "../../../utils/db/mongo/mongo.client";
 import { mapApiToCharacterModel, mapMongoToCharacterModel } from "../character.mapper";
+import { VALID_CATEGORIES } from "../character.types";
 
 let response: APIResponse;
 let responseBodyGetById: GetCharacterByIdResponse;
@@ -61,9 +62,9 @@ Then("the character should have categories", async () => {
 
 Then("each category should be valid", async () => {
   for (const category of responseBodyGetById.character.categories) {
-    expect(typeof category).toBe("string");
-    expect(category.length).toBeGreaterThan(0);
-    // Aquí mañana puedes validar contra CATEGORIES real
+    for (const category of responseBodyGetById.character.categories) {
+      expect(VALID_CATEGORIES).toContain(category);
+    }
   }
 });
 

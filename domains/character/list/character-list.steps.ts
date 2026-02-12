@@ -3,9 +3,11 @@ import { expect, type APIResponse } from "@playwright/test";
 import {
   disposeCharacterContext,
 } from "../character.context";
-import type { ListCharactersResponse } from "../character.api";
+import type { CharacterDTO, ListCharactersResponse } from "../character.api";
 import { ctx } from "../character.common.steps";
 import { expectInternalServerError } from "../../../utils/assertions";
+import { VALID_STATUSES } from "../../../contracts/common/status";
+import { VALID_CATEGORIES } from "../character.types";
 
 let response: APIResponse;
 let responseBodyList: ListCharactersResponse;
@@ -38,9 +40,9 @@ When("I request the list of characters with page {word}", async (page: string) =
 
 When("I request the list of characters with unknown query parameters", async () => {
   response = await ctx.characterApi.listCharacters({
-  // estos params NO existen en el contrato
-  // los pasamos como any para simular query real
-  // sin tocar el API client
+    // estos params NO existen en el contrato
+    // los pasamos como any para simular query real
+    // sin tocar el API client
   } as any);
 
   // forzamos la URL manualmente
@@ -135,20 +137,19 @@ Then("each returned character should match the CharacterDTO contract", async () 
   expect(typeof responseBodyList.limit).toBe("number");
   expect(typeof responseBodyList.total).toBe("number");
 
-  for (const character of responseBodyList.characters) {
-    expect(character).toBeTruthy();
-    expect(typeof character).toBe("object");
-
-    const c = character as any;
+  for (const c of responseBodyList.characters) {
 
     // required fields
     expect(typeof c.id).toBe("string");
     expect(typeof c.name).toBe("string");
-    expect(typeof c.status).toBe("string");
 
+    // Validate Status against contract
+    expect(VALID_STATUSES).toContain(c.status);
+
+    // Categories must be valid CategoryName
     expect(Array.isArray(c.categories)).toBe(true);
     for (const cat of c.categories) {
-      expect(typeof cat).toBe("string");
+      expect(VALID_CATEGORIES).toContain(cat);
     }
 
     expect(typeof c.identity).toBe("string");

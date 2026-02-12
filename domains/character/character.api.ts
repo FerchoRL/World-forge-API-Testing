@@ -1,4 +1,6 @@
 import type { APIRequestContext, APIResponse } from '@playwright/test'
+import { Status } from '../../contracts/common/status'
+import { CategoryName } from './character.types'
 
 /**
  * ===============================
@@ -24,8 +26,8 @@ import type { APIRequestContext, APIResponse } from '@playwright/test'
 export type CharacterDTO = {
     id: string
     name: string
-    status: string
-    categories: string[]
+    status: Status
+    categories: CategoryName[]
     identity: string
     inspirations: string[]
     notes?: string
