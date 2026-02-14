@@ -7,7 +7,7 @@ Feature: Character – Get by ID (GET /characters/:id)
   @tc-char-get-01
   Scenario: TC-CHAR-GET-01 – Existing character ID – Returns character
     When I request the character by id char_41x8tz7k
-    Then the response status should be 200
+    Then the character should be returned successfully
     And the response should contain a character
     And the character should have a valid id
     And the character should have a name
