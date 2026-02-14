@@ -1,6 +1,8 @@
 import type { CharacterDTO } from "../character.api";
-import type { Status } from "../../../contracts/common/status";
 import type { CategoryName } from "../character.types";
+import { generateWaifuName } from "./character-name.generator";
+
+import { buildInvalidFieldValue, type FieldKind } from "../../../tests/shared/test-data/invalid-value.factory";
 
 /**
  * ===============================
@@ -17,7 +19,25 @@ import type { CategoryName } from "../character.types";
  * - Escalable para múltiples variaciones.
  */
 
-type CreateCharacterPayload = Omit<CharacterDTO, "id">;
+type CreateCharacterPayload = Omit<CharacterDTO, "id"> & { status?: CharacterDTO["status"] };
+
+type CharacterInvalidField =
+  | "name"
+  | "identity"
+  | "categories"
+  | "status"
+  | "inspirations"
+  | "notes";
+
+const characterFieldKind: Record<CharacterInvalidField, FieldKind> = {
+  name: "string",
+  identity: "string",
+  notes: "string",
+  status: "string",
+  categories: "array",
+  inspirations: "array",
+};
+
 
 /**
  * Payload base válido.
@@ -26,8 +46,8 @@ export function buildValidCharacterPayload(
   overrides?: Partial<CreateCharacterPayload>
 ): CreateCharacterPayload {
   return {
-    name: "Airi Kurogane",
-    status: "ACTIVE" as Status,
+    name: generateWaifuName(),
+    status: "ACTIVE",
     categories: [
       "PersonajeTrágico",
       "Melancólico",
@@ -93,4 +113,26 @@ export function buildCharacterWithoutNotes(
   const base = buildValidCharacterPayload(overrides);
   delete base.notes;
   return base;
+}
+
+export function buildInvalidCharacterPayload(
+  field: CharacterInvalidField,
+  invalidType: string
+): unknown {
+  const base = buildValidCharacterPayload();
+
+  // 1) missing = removemos el campo
+  if (invalidType === "missing") {
+    const { [field]: _removed, ...rest } = base as any;
+    return rest;
+  }
+
+  // 2) para el resto de casos, pedimos un inválido según tipo de campo
+  const kind = characterFieldKind[field];
+  const invalidValue = buildInvalidFieldValue(kind, invalidType);
+
+  return {
+    ...base,
+    [field]: invalidValue,
+  };
 }
