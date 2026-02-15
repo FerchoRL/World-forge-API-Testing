@@ -4,7 +4,7 @@ import { expect, type APIResponse } from "@playwright/test";
 import { ctx } from "../character.common.steps";
 import { disposeCharacterContext } from "../character.context";
 
-import type { CharacterDTO, GetCharacterByIdResponse } from "../character.api";
+import { CharacterApi, type CharacterDTO, type GetCharacterByIdResponse } from "../character.api";
 import type { CharacterModel } from "../character.model";
 
 import { buildValidCharacterPayload, buildInvalidCharacterPayload, buildCharacterWithoutNotes } from "./character-create.payload";

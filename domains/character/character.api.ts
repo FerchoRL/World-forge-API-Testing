@@ -72,6 +72,13 @@ export class CharacterApi {
         return this.api.post('/characters', {
             data: character,
         })
-    }   
+    }
+
+    // Método para actualizar un personaje existente (PATCH parcial)
+    async updateCharacter(id: string, updates: Partial<Omit<CharacterDTO, 'id'>>): Promise<APIResponse> {
+        return this.api.patch(`/characters/${id}`, {
+            data: updates,
+        })
+    }
 
 }

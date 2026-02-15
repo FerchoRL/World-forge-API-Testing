@@ -1,6 +1,6 @@
 import type { CharacterDTO } from "../character.api";
 import type { CategoryName } from "../character.types";
-import { generateWaifuName } from "./character-name.generator";
+import { generateWaifuName } from "../character-name.generator";
 
 import { buildInvalidFieldValue, type FieldKind } from "../../../tests/shared/test-data/invalid-value.factory";
 

@@ -1,6 +1,6 @@
 /**
  * Generador de nombres únicos estilo waifu
- * Usado únicamente para testing de creación.
+ * Usado para testing en todos los endpoints de character (create, update, etc.)
  */
 
 export function generateWaifuName(): string {
