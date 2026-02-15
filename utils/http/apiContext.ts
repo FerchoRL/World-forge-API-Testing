@@ -8,7 +8,7 @@ export async function createApiContext(): Promise<APIRequestContext> {
 
   if (!baseURL) {
     throw new Error(
-      'BASE_URL is not defined. Create a .env file in the project root with BASE_URL=http://localhost:3001'
+      'BASE_URL is not defined. Create a .env file in the project root with BASE_URL=http://localhost:3002'
     )
   }
 

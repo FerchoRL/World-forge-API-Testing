@@ -46,7 +46,7 @@ Debes tener el backend corriendo antes de ejecutar los tests.
 Backend esperado
 
 ```txt
-URL: http://localhost:3001
+URL: http://localhost:3002
 ```
 
 Endpoint health:
@@ -66,12 +66,21 @@ Respuesta esperada:
 
 Crea un archivo .env en la raíz del proyecto:
 
-```json
-BASE_URL=http://localhost:3001
+```env
+BASE_URL=http://localhost:3002
+MONGO_URI=mongodb+srv://user:password@cluster.mongodb.net/worldforge_test
 ```
 
 ⚠️ Sin este archivo, los tests fallan.
 El .env NO se versiona (está en .gitignore).
+
+**Configuración:**
+
+- `BASE_URL`: URL donde corre tu backend (ajusta el puerto según tu configuración)
+- `MONGO_URI`: Conexión a MongoDB Atlas o local. La URI puede incluir el nombre de la base de datos directamente
+- Ejemplo MongoDB Atlas: `mongodb+srv://username:password@cluster.mongodb.net/worldforge_test`
+- Ejemplo MongoDB local: `mongodb://localhost:27017/worldforge_test`
+- (Opcional) `MONGO_DB_NAME`: Si prefieres separar el nombre de DB de la URI
 
 ## 6. Estructura del proyecto
 

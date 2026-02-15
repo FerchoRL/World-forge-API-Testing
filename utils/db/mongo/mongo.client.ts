@@ -24,7 +24,10 @@ export async function getDatabase(): Promise<Db> {
   client = new MongoClient(uri);
   await client.connect();
 
-  db = client.db(dbName);
+  // Si dbName está definido, usarlo explícitamente
+  // Si no, MongoDB usará el nombre de la DB incluido en la URI
+  db = dbName ? client.db(dbName) : client.db();
+  
   return db;
 }
 
