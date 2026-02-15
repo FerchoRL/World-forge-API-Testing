@@ -14,29 +14,34 @@ Feature: Character – List (GET /characters
     When I request the list of characters with page 2 and limit 5
     Then the response should respect the pagination values page 2 and limit 5
 
-  @tc-char-list-limit-normalization
-  Scenario Outline: Character list normalizes invalid limit values
+  @tc-char-list-03
+  Scenario: TC-CHAR-LIST-03 – Limit above max – Caps limit to 50
+    When I request the list of characters with limit 999
+    Then the response should cap the limit to 50
+
+  @tc-char-list-04-07
+  Scenario Outline: TC-CHAR-LIST-04 to 07 – Invalid limit values return 400
     When I request the list of characters with limit <limit>
-    Then the response should apply limit <expectedLimit>
+    Then the response should return a 400 error with message "Limit must be a positive integer"
 
     Examples:
-      | limit | expectedLimit |
-      |   100 |            50 |
-      |     0 |            10 |
-      |    -5 |            10 |
-      | abc   |            10 |
-      | false |            10 |
+      | limit | # TC                 |
+      |     0 | # TC-04: zero        |
+      |    -5 | # TC-05: negative    |
+      | abc   | # TC-06: non-numeric |
+      | false | # TC-07: boolean     |
 
-  @tc-char-list-page-normalization
-  Scenario Outline: Character list normalizes invalid page values
+  @tc-char-list-08-10
+  Scenario Outline: TC-CHAR-LIST-08 to 10.1 – Invalid page values return 400
     When I request the list of characters with page <page>
-    Then the response should default the page to 1
+    Then the response should return a 400 error with message "Page must be a positive integer"
 
     Examples:
-      | page |
-      |    0 |
-      |   -3 |
-      | abc  |
+      | page | # TC                 |
+      |    0 | # TC-08: zero        |
+      |   -3 | # TC-09: negative    |
+      | abc  | # TC-10: non-numeric |
+      | true | # TC-10.1: boolean   |
 
   @tc-char-list-11
   Scenario: TC-CHAR-LIST-11 – High page number – Returns empty list

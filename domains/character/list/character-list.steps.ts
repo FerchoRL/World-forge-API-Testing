@@ -28,24 +28,23 @@ When("I request the list of characters with page {int} and limit {int}", async (
   responseBodyList = (await response.json()) as ListCharactersResponse;
 });
 
-When("I request the list of characters with limit {word}", async (limit: string) => {
-  response = await ctx.characterApi.listCharacters({ limit });
+When(/^I request the list of characters with limit (\S+)$/, async (limit: string) => {
+  // Intentar parsear como número, si falla enviarlo como string
+  const parsedLimit = !isNaN(Number(limit)) ? Number(limit) : limit;
+  response = await ctx.characterApi.listCharacters({ limit: parsedLimit });
   responseBodyList = (await response.json()) as ListCharactersResponse;
 });
 
-When("I request the list of characters with page {word}", async (page: string) => {
-  response = await ctx.characterApi.listCharacters({ page });
+When(/^I request the list of characters with page (\S+)$/, async (page: string) => {
+  // Intentar parsear como número, si falla enviarlo como string
+  const parsedPage = !isNaN(Number(page)) ? Number(page) : page;
+  response = await ctx.characterApi.listCharacters({ page: parsedPage });
   responseBodyList = (await response.json()) as ListCharactersResponse;
 });
 
 When("I request the list of characters with unknown query parameters", async () => {
-  response = await ctx.characterApi.listCharacters({
-    // estos params NO existen en el contrato
-    // los pasamos como any para simular query real
-    // sin tocar el API client
-  } as any);
-
-  // forzamos la URL manualmente
+  // Enviamos parámetros que NO existen en el contrato: "limite" y "pagina"
+  // en lugar de "limit" y "page"
   response = await ctx.apiContext.get("/characters?limite=6&pagina=2");
   responseBodyList = (await response.json()) as ListCharactersResponse;
 });
@@ -92,13 +91,15 @@ Then("the response should apply limit {int}", async (expectedLimit: number) => {
   expect(typeof responseBodyList.total).toBe("number");
 });
 
-Then("the response should default the page to 1", async () => {
+Then("the response should cap the limit to {int}", async (cappedLimit: number) => {
   expect(response.status()).toBe(200);
 
   expect(responseBodyList.page).toBe(1);
-  expect(responseBodyList.limit).toBe(10);
+  expect(responseBodyList.limit).toBe(cappedLimit);
 
   expect(Array.isArray(responseBodyList.characters)).toBe(true);
+  expect(responseBodyList.characters.length).toBeLessThanOrEqual(cappedLimit);
+
   expect(typeof responseBodyList.total).toBe("number");
 });
 
@@ -122,6 +123,32 @@ Then("the response should ignore unknown query parameters", async () => {
 
   expect(Array.isArray(responseBodyList.characters)).toBe(true);
   expect(typeof responseBodyList.total).toBe("number");
+});
+
+/**
+ * VALIDACIONES DE ERRORES 400 - PARÁMETROS INVÁLIDOS
+ */
+Then("the response should return a 400 error with message {string}", async function (expectedMessage: string) {
+  expect(response.status()).toBe(400);
+  
+  const errorBody = await response.json();
+  
+  await this.attach(
+    JSON.stringify(
+      {
+        requestUrl: response.url(),
+        responseStatus: response.status(),
+        responseBody: errorBody,
+        expectedMessage: expectedMessage,
+      },
+      null,
+      2
+    ),
+    "application/json"
+  );
+  
+  expect(errorBody).toHaveProperty("error");
+  expect(errorBody.error).toBe(expectedMessage);
 });
 
 Then("the response should return a 500 internal server error", async () => {

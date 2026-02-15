@@ -8,11 +8,11 @@ Validar el comportamiento del endpoint de listado de personajes, asegurando que:
 
 - Retorna una lista paginada de personajes.
 - Aplica valores por defecto cuando no se envían parámetros.
-- Normaliza valores inválidos de paginación.
-- Respeta el límite máximo permitido.
+- **Valida estrictamente los parámetros de paginación**, retornando 400 Bad Request para valores inválidos.
+- Respeta el límite máximo permitido (cap a 50 en service).
 - Mantiene un contrato HTTP consistente.
 
-Este endpoint no expone errores de validación (400); cualquier falla interna se traduce en 500.
+Este endpoint **expone errores de validación (400)** para parámetros inválidos y errores internos (500) para fallas técnicas.
 
 ## Parámetros de Query
 
@@ -36,8 +36,34 @@ Campos
 
 - characters: arreglo de personajes (puede estar vacío)
 - page: página actual
-- limit: tamaño de página aplicado
+- limit: tamaño de página aplicado (max: 50)
 - total: total de personajes disponibles
+
+## Response (400 Bad Request)
+
+```json
+{
+  "error": "Page must be a positive integer"
+}
+```
+
+```json
+{
+  "error": "Limit must be a positive integer"
+}
+```
+
+**Nota importante:** El formato de error es `{ "error": "mensaje" }` (no `message`), gestionado por middleware global.
+
+## Response (500 Internal Server Error)
+
+```json
+{
+  "error": "Error message"
+}
+```
+
+Retornado cuando ocurre un error técnico inesperado en DB o cualquier falla interna no controlada.
 
 ## Test Cases
 
@@ -81,25 +107,25 @@ Expected Result:
 
 Descripción:
 
-Cuando el valor de limit excede el máximo permitido, el backend debe forzar el valor máximo.
+Cuando el valor de limit excede el máximo permitido, el service aplica un cap a 50.
 
 Request:
 
-``GET /characters?limit=100``
+``GET /characters?limit=999``
 
 Expected Result:
 
 - Status Code: 200
 - page = 1
-- limit = 50
+- limit = 50 (capeado por service)
 - characters.length ≤ 50
 - total está presente
 
-### TC-CHAR-LIST-04 – Limit equals zero – Defaults to limit 10
+### TC-CHAR-LIST-04 – Limit equals zero – Returns 400
 
 Descripción:
 
-Cuando limit es igual a 0, el backend debe aplicar el valor por defecto.
+Cuando limit es igual a 0, el backend debe retornar error de validación.
 
 Request:
 
@@ -107,17 +133,18 @@ Request:
 
 Expected Result:
 
-- Status Code: 200
-- page = 1
-- limit = 10
-- characters es un arreglo
-- total está presente
+- Status Code: 400
+- Response body:
 
-### TC-CHAR-LIST-05 – Negative limit value – Defaults to limit 10
+  ```json
+  { "error": "Limit must be a positive integer" }
+  ```
+
+### TC-CHAR-LIST-05 – Negative limit value – Returns 400
 
 Descripción:
 
-Cuando limit es un valor negativo, el backend debe aplicar el valor por defecto.
+Cuando limit es un valor negativo, el backend debe retornar error de validación.
 
 Request:
 
@@ -125,17 +152,18 @@ Request:
 
 Expected Result:
 
-- Status Code: 200
-- page = 1
-- limit = 10
-- characters es un arreglo
-- total está presente
+- Status Code: 400
+- Response body:
 
-### TC-CHAR-LIST-06 – Non-numeric limit value – Defaults to limit 10
+  ```json
+  { "error": "Limit must be a positive integer" }
+  ```
+
+### TC-CHAR-LIST-06 – Non-numeric limit value – Returns 400
 
 Descripción:
 
-Cuando limit contiene un valor no numérico, el backend debe aplicar el valor por defecto.
+Cuando limit contiene un valor no numérico, el backend debe retornar error de validación.
 
 Request:
 
@@ -143,17 +171,18 @@ Request:
 
 Expected Result:
 
-- Status Code: 200
-- page = 1
-- limit = 10
-- characters es un arreglo
-- total está presente
+- Status Code: 400
+- Response body:
 
-### TC-CHAR-LIST-07 – Boolean limit value – Defaults to limit 10
+  ```json
+  { "error": "Limit must be a positive integer" }
+  ```
+
+### TC-CHAR-LIST-07 – Boolean limit value – Returns 400
 
 Descripción:
 
-Cuando limit contiene un valor booleano, el backend debe aplicar el valor por defecto.
+Cuando limit contiene un valor booleano, el backend debe retornar error de validación.
 
 Request:
 
@@ -161,17 +190,18 @@ Request:
 
 Expected Result:
 
-- Status Code: 200
-- page = 1
-- limit = 10
-- characters es un arreglo
-- total está presente
+- Status Code: 400
+- Response body:
 
-### TC-CHAR-LIST-08 – Page equals zero – Defaults to page 1
+  ```json
+  { "error": "Limit must be a positive integer" }
+  ```
+
+### TC-CHAR-LIST-08 – Page equals zero – Returns 400
 
 Descripción:
 
-Cuando page es igual a 0, el backend debe aplicar el valor por defecto.
+Cuando page es igual a 0, el backend debe retornar error de validación.
 
 Request:
 
@@ -179,35 +209,37 @@ Request:
 
 Expected Result:
 
-- Status Code: 200
-- page = 1
-- limit = 10
-- characters es un arreglo
-- total está presente
+- Status Code: 400
+- Response body:
 
-### TC-CHAR-LIST-9 – Negative page value – Defaults to page 1
+  ```json
+  { "error": "Page must be a positive integer" }
+  ```
+
+### TC-CHAR-LIST-09 – Negative page value – Returns 400
 
 Descripción:
 
-Cuando page es un valor negativo, el backend debe aplicar el valor por defecto.
+Cuando page es un valor negativo, el backend debe retornar error de validación.
 
 Request:
 
-``GET /characters?page=-3``
+``GET /characters?page=-5``
 
 Expected Result:
 
-- Status Code: 200
-- page = 1
-- limit = 10
-- characters es un arreglo
-- total está presente
+- Status Code: 400
+- Response body:
 
-### TC-CHAR-LIST-10 – Non-numeric page value – Defaults to page 1
+  ```json
+  { "error": "Page must be a positive integer" }
+  ```
+
+### TC-CHAR-LIST-10 – Non-numeric page value – Returns 400
 
 Descripción:
 
-Cuando page contiene un valor no numérico, el backend debe aplicar el valor por defecto.
+Cuando page contiene un valor no numérico, el backend debe retornar error de validación.
 
 Request:
 
@@ -215,11 +247,31 @@ Request:
 
 Expected Result:
 
-- Status Code: 200
-- page = 1
-- limit = 10
-- characters es un arreglo
-- total está presente
+- Status Code: 400
+- Response body:
+
+  ```json
+  { "error": "Page must be a positive integer" }
+  ```
+
+### TC-CHAR-LIST-10.1 – Boolean page value – Returns 400
+
+Descripción:
+
+Cuando page contiene un valor booleano, el backend debe retornar error de validación.
+
+Request:
+
+``GET /characters?page=true``
+
+Expected Result:
+
+- Status Code: 400
+- Response body:
+
+  ```json
+  { "error": "Page must be a positive integer" }
+  ```
 
 ### TC-CHAR-LIST-11 – High page number – Returns empty list
 
@@ -261,7 +313,7 @@ Expected Result:
 
 Descripción:
 
-Cuando ocurre un error inesperado en el backend, el endpoint debe responder con error interno.
+Cuando ocurre un error técnico inesperado en DB (RepoError UNKNOWN) o cualquier falla interna, el endpoint debe responder con error interno.
 
 Request:
 
@@ -298,3 +350,45 @@ Expected Result:
   - identity: string
   - inspirations: string[] (arreglo de strings)
   - notes (opcional): si existe, es string
+
+---
+
+## Resumen de Escenarios Cubiertos
+
+### ✅ Casos exitosos (200 OK)
+
+| Request | Response |
+|---------|----------|
+
+| `GET /characters` | Lista paginada con defaults: page=1, limit=10 |
+| `GET /characters?page=2&limit=20` | Lista paginada respetando parámetros |
+| `GET /characters?limit=999` | Lista paginada con limit capeado a 50 por service |
+| `GET /characters?page=9999` | Lista vacía si no hay resultados en esa página |
+
+### ❌ Errores de validación (400 Bad Request)
+
+| Request | Error Message |
+|---------|---------------|
+
+| `GET /characters?page=-5` | `{ "error": "Page must be a positive integer" }` |
+| `GET /characters?page=0` | `{ "error": "Page must be a positive integer" }` |
+| `GET /characters?page=abc` | `{ "error": "Page must be a positive integer" }` |
+| `GET /characters?limit=0` | `{ "error": "Limit must be a positive integer" }` |
+| `GET /characters?limit=-5` | `{ "error": "Limit must be a positive integer" }` |
+| `GET /characters?limit=abc` | `{ "error": "Limit must be a positive integer" }` |
+| `GET /characters?limit=false` | `{ "error": "Limit must be a positive integer" }` |
+| `GET /characters?page=-5&limit=abc` | `{ "error": "Page must be a positive integer" }` o `{ "error": "Limit must be a positive integer" }` |
+| RepoError VALIDATION | `{ "error": "<mensaje de validación>" }` |
+
+### 💥 Errores internos (500 Internal Server Error)
+
+| Escenario | Error Message |
+|-----------|---------------|
+
+| RepoError UNKNOWN o error técnico en DB | `{ "error": "<mensaje del error>" }` |
+
+**Notas importantes:**
+
+- El formato de error es `{ "error": "mensaje" }` (no `message`), gestionado por middleware global.
+- El service aplica un **cap de limit a 50**, aunque se solicite un valor mayor.
+- Los defaults son: `page=1`, `limit=10`.
