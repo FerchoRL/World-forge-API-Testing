@@ -5,9 +5,11 @@
 Validar el comportamiento del endpoint de obtención de personajes por ID, asegurando que:
 
 - Retorna un character válido cuando el ID existe
-- Valida correctamente IDs inválidos o inexistentes
-- Mantiene un contrato HTTP consistente
-- No expone errores internos inesperados
+- **Valida estrictamente IDs faltantes, vacíos o inválidos** retornando 400 Bad Request
+- **Retorna 404 Not Found** cuando el ID es válido pero no existe en el sistema
+- Mantiene un contrato HTTP consistente con formato de error `{ "error": "mensaje" }`
+- Propaga errores de validación desde el repositorio (400)
+- Maneja errores técnicos inesperados retornando 500
 - Retorna información coherente con la persistencia (MongoDB)
 
 ## Endpoint
@@ -29,6 +31,42 @@ Validar el comportamiento del endpoint de obtención de personajes por ID, asegu
   }
 }
 ```
+
+## Response (400 Bad Request)
+
+```json
+{
+  "error": "Character id is required"
+}
+```
+
+```json
+{
+  "error": "<mensaje de validación desde repositorio>"
+}
+```
+
+**Nota importante:** El formato de error es `{ "error": "mensaje" }` (no `message`), gestionado por middleware global.
+
+## Response (404 Not Found)
+
+```json
+{
+  "error": "Character <id> not found"
+}
+```
+
+Retornado cuando el ID tiene formato válido pero no existe en la base de datos.
+
+## Response (500 Internal Server Error)
+
+```json
+{
+  "error": "<mensaje del error>"
+}
+```
+
+Retornado cuando ocurre un error técnico inesperado en DB (RepoError UNKNOWN) o cualquier falla interna no controlada.
 
 ## Test Cases
 
@@ -55,53 +93,51 @@ Expected Result:
   - inspirations (string[])
   - notes (opcional, string)
 
-### TC-CHAR-GET-02 – Non-existent character ID – Returns validation error (400)
+### TC-CHAR-GET-02 – Non-existent character ID – Returns 404
 
 Descripción:
 
-Cuando el ID no existe en el sistema, el backend debe responder con un error de validación.
+Cuando el ID tiene formato válido pero no existe en el sistema, el backend debe responder con 404 Not Found.
 
 Request:
 
-``GET /characters/non-existent-id``
+``GET /characters/507f1f77bcf86cd799439011``
 
 Expected Result:
 
-- Status Code: 400
-- Response contiene un mensaje de error
+- Status Code: 404
+- Response body:
 
-### TC-CHAR-GET-03 – Invalid character ID format – Returns validation error (400)
-
-Descripción:
-
-Cuando el ID tiene un formato inválido (ej. caracteres especiales, string vacío), el backend debe responder con error de validación.
-
-Request:
-
-GET /characters/@@@
-
-Expected Result:
-
-Status Code: 400
-
-Response contiene un mensaje de error
+  ```json
+  { "error": "Character 507f1f77bcf86cd799439011 not found" }
+  ```
 
 ### TC-CHAR-GET-04 – Internal server error – Returns 500 (TODO)
 
 Descripción:
 
-Cuando ocurre un error inesperado en el backend, el endpoint debe responder con error interno.
+Cuando ocurre un error técnico inesperado en DB (RepoError UNKNOWN) o cualquier falla interna, el endpoint debe responder con error interno.
 
 Request:
 
 ``GET /characters/{id}``
 
+⚠️ Este escenario requiere soporte del backend para forzar error (env / header).
+
 Expected Result:
 
 - Status Code: 500
-- Response contiene mensaje de error genérico
+- Response body:
 
-⚠️ Este escenario requiere soporte del backend para forzar error (env / header).
+  ```json
+  { "error": "Error fetching character from database" }
+  ```
+
+  o
+
+  ```json
+  { "error": "<mensaje del error técnico>" }
+  ```
 
 ### TC-CHAR-GET-05 – Character data matches database record (MongoDB)
 
@@ -117,3 +153,43 @@ Expected Result:
 
 - Status Code: 200
 - Los campos del character coinciden con los valores persistidos en MongoDB
+
+---
+
+## Resumen de Escenarios Cubiertos
+
+### ✅ Casos exitosos (200 OK)
+
+| Request | Response |
+|---------|----------|
+
+| `GET /characters/{existingId}` | Character completo con estructura CharacterDTO |
+
+### ❌ Errores de validación (400 Bad Request)
+
+| Escenario | Error Message |
+|-----------|---------------|
+
+| ID faltante o vacío | `{ "error": "Character id is required" }` |
+| ValidationError desde repositorio | `{ "error": "<mensaje de validación>" }` |
+
+### 🔍 Recurso no encontrado (404 Not Found)
+
+| Request | Error Message |
+|---------|---------------|
+
+| `GET /characters/{validButNonExistentId}` | `{ "error": "Character <id> not found" }` |
+
+### 💥 Errores internos (500 Internal Server Error)
+
+| Escenario | Error Message |
+|-----------|---------------|
+
+| RepoError UNKNOWN o error técnico en DB | `{ "error": "Error fetching character from database" }` o `{ "error": "<mensaje del error>" }` |
+
+**Notas importantes:**
+
+- El formato de error es `{ "error": "mensaje" }` (no `message`), gestionado por middleware global.
+- Los IDs deben ser strings válidos y no vacíos.
+- El código 404 se usa solo cuando el ID es válido pero no existe en DB.
+- El código 400 se usa para errores de validación (ID faltante, vacío, o ValidationError de Mongoose).

@@ -79,18 +79,6 @@ Then("the response should respect the pagination values page {int} and limit {in
   expect(typeof responseBodyList.total).toBe("number");
 });
 
-Then("the response should apply limit {int}", async (expectedLimit: number) => {
-  expect(response.status()).toBe(200);
-
-  expect(responseBodyList.page).toBe(1);
-  expect(responseBodyList.limit).toBe(expectedLimit);
-
-  expect(Array.isArray(responseBodyList.characters)).toBe(true);
-  expect(responseBodyList.characters.length).toBeLessThanOrEqual(expectedLimit);
-
-  expect(typeof responseBodyList.total).toBe("number");
-});
-
 Then("the response should cap the limit to {int}", async (cappedLimit: number) => {
   expect(response.status()).toBe(200);
 

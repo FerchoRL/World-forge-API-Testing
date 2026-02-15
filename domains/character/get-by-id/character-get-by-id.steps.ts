@@ -15,12 +15,12 @@ let response: APIResponse;
 let responseBodyGetById: GetCharacterByIdResponse;
 
 // Steps para GET /characters/{id}
-When("I request the character by id {word}", async (id: string) => {
+When("I request the character by id {string}", async (id: string) => {
   response = await ctx.characterApi.getCharacterById(id);
   responseBodyGetById = (await response.json()) as GetCharacterByIdResponse;
 });
 
-When("I request the character by id {word} and an internal error occurs", async (id: string) => {
+When("I request the character by id {string} and an internal error occurs", async (id: string) => {
   // TODO:
   // When backend supports forcing internal errors (via header or env),
   // this request should include that trigger.
@@ -65,9 +65,7 @@ Then("the character should have categories", async () => {
 
 Then("each category should be valid", async () => {
   for (const category of responseBodyGetById.character.categories) {
-    for (const category of responseBodyGetById.character.categories) {
-      expect(VALID_CATEGORIES).toContain(category);
-    }
+    expect(VALID_CATEGORIES).toContain(category);
   }
 });
 
@@ -92,10 +90,28 @@ Then("the character notes should be valid if present", async () => {
   }
 });
 
-Then("the response should return a 400 validation error for id {word}", async (id: string) => {
-  expect(response.status()).toBe(400);
-  const body = await response.json();
-  expect(body.error).toContain(id);
+Then("the get by id response should return a {int} error with message {string}", async function (expectedStatus: number, expectedMessage: string) {
+  expect(response.status()).toBe(expectedStatus);
+  
+  const errorBody = await response.json();
+  
+  await this.attach(
+    JSON.stringify(
+      {
+        requestUrl: response.url(),
+        responseStatus: response.status(),
+        responseBody: errorBody,
+        expectedStatus: expectedStatus,
+        expectedMessage: expectedMessage,
+      },
+      null,
+      2
+    ),
+    "application/json"
+  );
+  
+  expect(errorBody).toHaveProperty("error");
+  expect(errorBody.error).toBe(expectedMessage);
 });
 
 Then("the response should match the character stored in the database", async function () {
