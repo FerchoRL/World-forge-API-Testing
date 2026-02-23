@@ -6,6 +6,7 @@ import { disposeCharacterContext } from "../character.context";
 
 import { CharacterApi, type CharacterDTO, type CreateCharacterRequest, type GetCharacterByIdResponse } from "../character.api";
 import type { CharacterModel } from "../character.model";
+import { generateWaifuName } from "../character-name.generator";
 
 import { buildValidCharacterPayload, buildInvalidCharacterPayload, buildCharacterWithoutNotes } from "./character-create.payload";
 
@@ -171,6 +172,37 @@ When("I create a character with extra unknown fields", async () => {
   createdCharacterModel = mapApiToCharacterModel(responseBody);
 });
 
+When("I create a character with duplicated name against status {string}", async (status: string) => {
+  const sourceStatus = status.trim().toUpperCase() as "ACTIVE" | "DRAFT";
+  const duplicatedName = generateWaifuName();
+
+  const existingPayload = buildValidCharacterPayload({
+    name: duplicatedName,
+    status: sourceStatus,
+  });
+
+  const existingResponse = await ctx.characterApi.createCharacter(existingPayload);
+  expect(existingResponse.status()).toBe(201);
+
+  payload = buildValidCharacterPayload({
+    name: duplicatedName,
+    status: "ACTIVE",
+  });
+
+  response = await ctx.characterApi.createCharacter(payload);
+});
+
+When("I create a character reusing a name from an ARCHIVED character", async () => {
+  payload = buildValidCharacterPayload({
+    name: "Hu Tao",
+    status: "ACTIVE",
+  });
+
+  response = await ctx.characterApi.createCharacter(payload);
+  responseBody = (await response.json()) as CharacterDTO;
+  createdCharacterModel = mapApiToCharacterModel(responseBody);
+});
+
 
 // Validación de respuesta HTTP
 
@@ -258,8 +290,8 @@ Then("the created character should have status DRAFT", async () => {
   expect(responseBody.status).toBe("DRAFT");
 });
 
-Then("the created character should fail with status 400", async () => {
-  expect(response.status()).toBe(400);
+Then("the created character should fail with status {int}", async (expectedStatus: number) => {
+  expect(response.status()).toBe(expectedStatus);
 });
 
 Then("the status error message should include the invalid status value", async function () {

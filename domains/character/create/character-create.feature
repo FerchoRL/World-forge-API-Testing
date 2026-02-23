@@ -173,3 +173,20 @@ Feature: Character – Create (POST /characters)
     Then the character should be created successfully
     And the created character should match the payload
     And the created character should be stored in the database
+
+  @tc-char-create-18a @tc-char-create-18b
+  Scenario Outline: TC-CHAR-CREATE-18A/18B – Duplicate name against ACTIVE and DRAFT – Returns 409
+    When I create a character with duplicated name against status "<status>"
+    Then the created character should fail with status 409
+    And the character error message should be "Character name already exists for an ACTIVE or DRAFT character"
+
+    Examples:
+      | status |
+      | ACTIVE |
+      | DRAFT  |
+
+  @tc-char-create-18c
+  Scenario: TC-CHAR-CREATE-18C – Reuse name from ARCHIVED – Returns 201
+    When I create a character reusing a name from an ARCHIVED character
+    Then the character should be created successfully
+    And the created character should match the payload

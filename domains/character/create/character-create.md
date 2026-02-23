@@ -371,14 +371,59 @@ Pendiente documentar y automatizar:
 - Create con `image` de tipo inválido (400).
 - Create con `image` vacío o solo espacios (definir comportamiento esperado según contrato).
 
-### TODO – Reglas y escenarios de unicidad de name
+### TC-CHAR-CREATE-18 – Name uniqueness rules
 
-Pendiente documentar y automatizar reglas de negocio:
+Descripción:
+
+Validar la regla de unicidad de `name` durante create:
 
 - `name` debe ser único entre Characters en estado `DRAFT` y `ACTIVE`.
-- `name` de Characters `ARCHIVED` no bloquea reutilización.
-- Caso create duplicado contra `DRAFT`/`ACTIVE` (error esperado).
-- Caso create reutilizando nombre de `ARCHIVED` (éxito esperado).
+- Characters en `ARCHIVED` no bloquean la reutilización del `name`.
+
+#### TC-CHAR-CREATE-18A – Duplicate name against ACTIVE – Returns 409
+
+Precondición:
+
+- Existe un Character con `name = "X"` y `status = "ACTIVE"`.
+
+Request:
+
+- `POST /characters` con `name = "X"`.
+
+Expected Result:
+
+- Status Code: 409
+- error: "Character name already exists for an ACTIVE or DRAFT character"
+
+#### TC-CHAR-CREATE-18B – Duplicate name against DRAFT – Returns 409
+
+Precondición:
+
+- Existe un Character con `name = "X"` y `status = "DRAFT"`.
+
+Request:
+
+- `POST /characters` con `name = "X"`.
+
+Expected Result:
+
+- Status Code: 409
+- error: "Character name already exists for an ACTIVE or DRAFT character"
+
+#### TC-CHAR-CREATE-18C – Reuse name from ARCHIVED – Returns 201
+
+Precondición:
+
+- Existe un Character con `name = "X"` y `status = "ARCHIVED"`.
+
+Request:
+
+- `POST /characters` con `name = "X"`.
+
+Expected Result:
+
+- Status Code: 201
+- Character creado exitosamente.
 
 ### TC-CHAR-CREATE-17 – Internal server error – Returns 500
 
