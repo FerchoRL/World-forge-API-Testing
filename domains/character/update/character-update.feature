@@ -35,7 +35,7 @@ Feature: Character – Update (PATCH /characters/:id)
   Scenario: TC-CHAR-UPDATE-05 – Non-existent character ID – Returns 404
     When I attempt to update a character with a non-existent ID
     Then the character update should fail with status 404
-    And the updated character error message should be "Character not found after update"
+    And the updated character error message should be "Character not found"
 
   @tc-char-update-06
   Scenario: TC-CHAR-UPDATE-06 – Unsupported field (status) – Returns 400
@@ -58,10 +58,21 @@ Feature: Character – Update (PATCH /characters/:id)
       | booleanTrue  |
 
   @tc-char-update-07b
-  Scenario: TC-CHAR-UPDATE-07B – Duplicate character name – Returns 409
-    When I attempt to update a character with an already existing name
+  Scenario Outline: TC-CHAR-UPDATE-07B – Duplicate character name against ACTIVE/DRAFT – Returns 409
+    When I attempt to update a character with an already existing name from status "<status>"
     Then the character update should fail with status 409
-    And the updated character error message should be "Character with this name already exists"
+    And the updated character error message should be "Character name already exists for an ACTIVE or DRAFT character"
+
+    Examples:
+      | status |
+      | ACTIVE |
+      | DRAFT  |
+
+  @tc-char-update-07c
+  Scenario: TC-CHAR-UPDATE-07C – Reuse archived name Hu Tao – Returns 200
+    When I update a character name using archived name "Hu Tao"
+    Then the character update should be successful
+    And the updated character should reflect the changes from the update payload
 
   @tc-char-update-08
   Scenario Outline: TC-CHAR-UPDATE-08 – Invalid identity variations – Returns 400

@@ -368,11 +368,11 @@ Cuando se envía el campo `name` con valores inválidos (vacío, espacios, null,
 
 ---
 
-### TC-CHAR-UPDATE-07B – Duplicate character name – Returns 409
+### TC-CHAR-UPDATE-07B – Duplicate character name against ACTIVE/DRAFT – Returns 409
 
 **Descripción:**
 
-Cuando se intenta actualizar un personaje con un nombre que ya está siendo usado por otro personaje en el sistema, el backend debe responder con error de conflicto.
+Cuando se intenta actualizar un personaje con un nombre que ya está siendo usado por otro personaje en estado `ACTIVE` o `DRAFT`, el backend debe responder con error de conflicto.
 
 **Request:**
 
@@ -385,16 +385,54 @@ Content-Type: application/json
 }
 ```
 
+**Cucumber Table sugerida para cubrir ambos estados (ACTIVE y DRAFT):**
+
+```gherkin
+When I attempt to update a character with an already existing name from statuses:
+  | status |
+  | ACTIVE |
+  | DRAFT  |
+```
+
 **Expected Result:**
 
 - Status Code: 409
 - Response body:
 
   ```json
-  { "error": "Character with this name already exists" }
+  { "error": "Character name already exists for an ACTIVE or DRAFT character" }
   ```
 
-**Nota:** Este test requiere que exista otro personaje con el nombre que se intenta usar. La validación de unicidad aplica a nivel sistema, no por personaje.
+**Nota:** Este test requiere que exista otro personaje con el nombre que se intenta usar en estado `ACTIVE` o `DRAFT`. La validación de unicidad aplica a nivel sistema para personajes vigentes.
+
+---
+
+### TC-CHAR-UPDATE-07C – Reuse archived name (Hu Tao) – Returns 200
+
+**Descripción:**
+
+Cuando se actualiza un personaje usando un nombre que solo existe en un personaje `ARCHIVED`, la operación debe ser permitida.
+
+**Precondición:**
+
+- Existe en DB un personaje con `name = "Hu Tao"` y `status = "ARCHIVED"`.
+
+**Request:**
+
+```text
+PATCH /characters/{characterId}
+Content-Type: application/json
+
+{
+  "name": "Hu Tao"
+}
+```
+
+**Expected Result:**
+
+- Status Code: 200
+- El personaje se actualiza correctamente con el nombre `Hu Tao`.
+- No debe retornar conflicto de unicidad.
 
 ---
 
@@ -674,9 +712,8 @@ Content-Type: application/json
 
 ### ⚠️ Conflicto (409 Conflict)
 
-| Escenario | Error Message |
-|-----------|---------------|
-| Nombre duplicado | `{ "error": "Character with this name already exists" }` |
+- Escenario: Nombre duplicado
+- Error Message: `{ "error": "Character name already exists for an ACTIVE or DRAFT character" }`
 
 ### 🔍 Recurso no encontrado (404 Not Found)
 

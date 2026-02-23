@@ -243,13 +243,16 @@ When("I update a character with invalid notes type {string}", async (type: strin
   
   response = await ctx.characterApi.updateCharacter(existingCharacterId, updatePayload);
 });
-When("I attempt to update a character with an already existing name", async () => {
+When("I attempt to update a character with an already existing name from status {string}", async (status: string) => {
+  const sourceStatus = status.trim().toUpperCase() as "ACTIVE" | "DRAFT";
+
   // Crear primer character con nombre específico
-  const firstCharacterName = `Character-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+  const firstCharacterName = generateWaifuName();
   const firstPayload = buildValidCharacterPayload({ name: firstCharacterName });
+  firstPayload.status = sourceStatus;
   const firstResponse = await ctx.characterApi.createCharacter(firstPayload);
   const firstCharacterBody = (await firstResponse.json()) as CharacterDTO;
-  const firstCharacterId = firstCharacterBody.id;
+  expect(firstCharacterBody.id).toBeDefined();
 
   // Crear segundo character que intentaremos actualizar
   existingCharacterId = await createCharacterWithValidPayload(ctx.characterApi);
@@ -261,6 +264,19 @@ When("I attempt to update a character with an already existing name", async () =
   
   response = await ctx.characterApi.updateCharacter(existingCharacterId, updatePayload);
 });
+
+When("I update a character name using archived name {string}", async (archivedName: string) => {
+  existingCharacterId = await createCharacterWithValidPayload(ctx.characterApi);
+
+  updatePayload = {
+    name: archivedName,
+  };
+
+  response = await ctx.characterApi.updateCharacter(existingCharacterId, updatePayload);
+  responseBody = (await response.json()) as GetCharacterByIdResponse;
+  updatedCharacterModel = mapApiToCharacterModel(responseBody.character);
+});
+
 When("I update a character with an empty body", async () => {
   // Crear character usando helper reutilizable
   existingCharacterId = await createCharacterWithValidPayload(ctx.characterApi);
