@@ -23,7 +23,7 @@ Feature: Character – Create (POST /characters)
   Scenario: TC-CHAR-CREATE-03 – Invalid status value – Returns 400
     When I create a character with an invalid status
     Then the created character should fail with status 400
-    And the error message should indicate an invalid status
+    And the status error message should include the invalid status value
 
   @tc-char-create-04
   Scenario Outline: TC-CHAR-CREATE-04 – Invalid name variations – Returns 400

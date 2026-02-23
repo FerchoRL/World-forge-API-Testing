@@ -1,4 +1,4 @@
-import type { CharacterDTO } from "../character.api";
+import type { CreateCharacterInput } from "../character.api";
 import type { CategoryName } from "../character.types";
 import { generateWaifuName } from "../character-name.generator";
 
@@ -19,7 +19,7 @@ import { buildInvalidFieldValue, type FieldKind } from "../../../tests/shared/te
  * - Escalable para múltiples variaciones.
  */
 
-type CreateCharacterPayload = Omit<CharacterDTO, "id"> & { status?: CharacterDTO["status"] };
+type CreateCharacterPayload = CreateCharacterInput & { status?: CreateCharacterInput["status"] };
 
 type CharacterInvalidField =
   | "name"
@@ -80,18 +80,6 @@ export function buildDraftCharacterPayload(
 }
 
 /**
- * Variante: Archived character
- */
-export function buildArchivedCharacterPayload(
-  overrides?: Partial<CreateCharacterPayload>
-): CreateCharacterPayload {
-  return buildValidCharacterPayload({
-    status: "ARCHIVED",
-    ...overrides,
-  });
-}
-
-/**
  * Variante: Custom categories
  */
 export function buildCharacterWithCategories(
@@ -117,7 +105,8 @@ export function buildCharacterWithoutNotes(
 
 export function buildInvalidCharacterPayload(
   field: CharacterInvalidField,
-  invalidType: string
+  invalidType: string,
+  options?: { invalidValue?: unknown }
 ): unknown {
   const base = buildValidCharacterPayload();
 
@@ -129,7 +118,7 @@ export function buildInvalidCharacterPayload(
 
   // 2) para el resto de casos, pedimos un inválido según tipo de campo
   const kind = characterFieldKind[field];
-  const invalidValue = buildInvalidFieldValue(kind, invalidType);
+  const invalidValue = options?.invalidValue ?? buildInvalidFieldValue(kind, invalidType);
 
   return {
     ...base,

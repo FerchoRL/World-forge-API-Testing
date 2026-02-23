@@ -25,7 +25,8 @@ Este endpoint expone errores de validación (400) cuando el input no cumple las 
   "categories": ["Emocional"],
   "identity": "Descripción interna del personaje",
   "inspirations": ["Genshin Impact"],
-  "notes": "Opcional"
+  "notes": "Opcional",
+  "image": "https://cdn.worldforge.dev/characters/base/hu-tao.png"
 }
 ```
 
@@ -37,6 +38,7 @@ Este endpoint expone errores de validación (400) cuando el input no cumple las 
 - identity: string (obligatorio, no vacío)
 - inspirations: string[] (obligatorio, al menos 1)
 - notes: string (opcional)
+- image: string (opcional, referencia visual conceptual)
 
 ## Response (201 Created)
 
@@ -48,7 +50,8 @@ Este endpoint expone errores de validación (400) cuando el input no cumple las 
   "categories": ["Emocional"],
   "identity": "Descripción interna del personaje",
   "inspirations": ["Genshin Impact"],
-  "notes": "Opcional"
+  "notes": "Opcional",
+  "image": "https://cdn.worldforge.dev/characters/base/hu-tao.png"
 }
 ```
 
@@ -57,6 +60,7 @@ Este endpoint expone errores de validación (400) cuando el input no cumple las 
 - id string (generado por el backend)
 - El resto refleja los valores persistidos
 - status debe ser DRAFT si no se envio
+- image puede venir presente o ausente (campo opcional)
 
 ## Test Cases
 
@@ -357,6 +361,24 @@ Expected Result:
 
 - Status Code: 201
 - API DTO mapeado coincide con documento Mongo (usando mapper y modelo canónico)
+
+### TODO – Escenarios de image
+
+Pendiente documentar y automatizar:
+
+- Create con `image` válido (201) y persistencia en DB.
+- Create sin `image` (201) manteniendo campo opcional.
+- Create con `image` de tipo inválido (400).
+- Create con `image` vacío o solo espacios (definir comportamiento esperado según contrato).
+
+### TODO – Reglas y escenarios de unicidad de name
+
+Pendiente documentar y automatizar reglas de negocio:
+
+- `name` debe ser único entre Characters en estado `DRAFT` y `ACTIVE`.
+- `name` de Characters `ARCHIVED` no bloquea reutilización.
+- Caso create duplicado contra `DRAFT`/`ACTIVE` (error esperado).
+- Caso create reutilizando nombre de `ARCHIVED` (éxito esperado).
 
 ### TC-CHAR-CREATE-17 – Internal server error – Returns 500
 

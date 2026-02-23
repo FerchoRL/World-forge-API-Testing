@@ -27,6 +27,7 @@ export function mapApiToCharacterModel(dto: CharacterDTO): CharacterModel {
     identity: dto.identity,
     inspirations: dto.inspirations,
     notes: dto.notes,
+    image: dto.image,
   }
 }
 
@@ -44,5 +45,6 @@ export function mapMongoToCharacterModel(
     identity: doc.identity,
     inspirations: doc.inspirations,
     notes: doc.notes,
+    image: doc.image,
   }
 }

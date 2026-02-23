@@ -1,4 +1,5 @@
 import type { CharacterApi, CharacterDTO } from "./character.api";
+import type { CharacterId } from "./character.types";
 import { buildValidCharacterPayload } from "./create/character-create.payload";
 
 /**
@@ -16,7 +17,7 @@ import { buildValidCharacterPayload } from "./create/character-create.payload";
  * @param characterApi - The character API client instance
  * @returns The ID of the newly created character
  */
-export async function createCharacterWithValidPayload(characterApi: CharacterApi): Promise<string> {
+export async function createCharacterWithValidPayload(characterApi: CharacterApi): Promise<CharacterId> {
   const payload = buildValidCharacterPayload();
   const response = await characterApi.createCharacter(payload);
   const body = (await response.json()) as CharacterDTO;

@@ -1,6 +1,6 @@
 import type { APIRequestContext, APIResponse } from '@playwright/test'
 import { Status } from '../../contracts/common/status'
-import { CategoryName } from './character.types'
+import { CategoryName, CharacterId } from './character.types'
 
 /**
  * ===============================
@@ -24,13 +24,37 @@ import { CategoryName } from './character.types'
  */
 
 export type CharacterDTO = {
-    id: string
+    id: CharacterId
     name: string
     status: Status
     categories: CategoryName[]
     identity: string
     inspirations: string[]
     notes?: string
+    image?: string
+}
+
+export type CreateCharacterInput = {
+    name: string
+    status: 'DRAFT' | 'ACTIVE'
+    categories: CategoryName[]
+    identity: string
+    inspirations: string[]
+    notes?: string
+    image?: string
+}
+
+export type CreateCharacterRequest = Omit<CreateCharacterInput, 'status'> & {
+    status?: CreateCharacterInput['status']
+}
+
+export type UpdateCharacterCoreInput = {
+    name?: string
+    identity?: string
+    categories?: CategoryName[]
+    inspirations?: string[]
+    notes?: string
+    image?: string
 }
 
 export type ListCharactersResponse = {
@@ -68,14 +92,14 @@ export class CharacterApi {
     }
 
     // Metodo para crear un nuevo personaje
-    async createCharacter(character: Omit<CharacterDTO, 'id'>): Promise<APIResponse> {
+    async createCharacter(character: CreateCharacterRequest): Promise<APIResponse> {
         return this.api.post('/characters', {
             data: character,
         })
     }
 
     // Método para actualizar un personaje existente (PATCH parcial)
-    async updateCharacter(id: string, updates: Partial<Omit<CharacterDTO, 'id'>>): Promise<APIResponse> {
+    async updateCharacter(id: string, updates: UpdateCharacterCoreInput): Promise<APIResponse> {
         return this.api.patch(`/characters/${id}`, {
             data: updates,
         })

@@ -4,7 +4,7 @@ import { expect, type APIResponse } from "@playwright/test";
 import { ctx } from "../character.common.steps";
 import { disposeCharacterContext } from "../character.context";
 
-import { CharacterApi, type CharacterDTO, type GetCharacterByIdResponse } from "../character.api";
+import { CharacterApi, type CharacterDTO, type CreateCharacterRequest, type GetCharacterByIdResponse } from "../character.api";
 import type { CharacterModel } from "../character.model";
 
 import { buildValidCharacterPayload, buildInvalidCharacterPayload, buildCharacterWithoutNotes } from "./character-create.payload";
@@ -19,7 +19,7 @@ import { closeDatabase } from "../../../utils/db/mongo/mongo.client";
 
 let response: APIResponse;
 let responseBody: CharacterDTO;
-let payload: Omit<CharacterDTO, "id">;
+let payload: CreateCharacterRequest;
 let createdCharacterModel: CharacterModel;
 
 let getByIdResponseBody: GetCharacterByIdResponse;
@@ -49,7 +49,9 @@ When("I create a character without status", async () => {
 });
 
 When("I create a character with an invalid status", async () => {
-  payload = buildInvalidCharacterPayload("status", "invalidEnum") as any;
+  payload = buildInvalidCharacterPayload("status", "invalidEnum", {
+    invalidValue: "ILLEGAL_STATUS",
+  }) as any;
   response = await ctx.characterApi.createCharacter(payload);
 });
 
@@ -192,6 +194,7 @@ Then("the created character should match the payload", async function () {
   const expectedModel: CharacterModel = {
     ...payload,
     id: responseBody.id,
+    status: payload.status ?? responseBody.status,
   };
 
   await (this as any).attach(
@@ -259,13 +262,17 @@ Then("the created character should fail with status 400", async () => {
   expect(response.status()).toBe(400);
 });
 
-Then("the error message should indicate an invalid status", async function () {
+Then("the status error message should include the invalid status value", async function () {
   const body = await response.json();
+  const invalidStatus = (payload as any)?.status;
+  const expectedError = `Status ${invalidStatus} is not valid. Allowed values: DRAFT | ACTIVE`;
 
   await this.attach(
     JSON.stringify(
       {
         requestPayload: payload,
+        invalidStatus,
+        expectedError,
         responseStatus: response.status(),
         responseBody: body,
       },
@@ -276,8 +283,7 @@ Then("the error message should indicate an invalid status", async function () {
   );
 
   expect(body).toEqual({
-    error:
-      "Status ILEGAL is not valid. Allowed values: DRAFT | ACTIVE | ARCHIVED",
+    error: expectedError,
   });
 });
 

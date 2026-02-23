@@ -4,7 +4,7 @@ import { expect, type APIResponse } from "@playwright/test";
 import { ctx } from "../character.common.steps";
 import { disposeCharacterContext } from "../character.context";
 
-import type { CharacterDTO, GetCharacterByIdResponse } from "../character.api";
+import type { CharacterDTO, GetCharacterByIdResponse, UpdateCharacterCoreInput } from "../character.api";
 import type { CharacterModel } from "../character.model";
 
 import { createCharacterWithValidPayload } from "../character.test-helpers";
@@ -22,7 +22,7 @@ import { buildInvalidCharacterPayload, buildValidCharacterPayload } from "../cre
 
 let response: APIResponse;
 let responseBody: GetCharacterByIdResponse;
-let updatePayload: Partial<Omit<CharacterDTO, "id">>;
+let updatePayload: UpdateCharacterCoreInput;
 let existingCharacterId: string;
 let updatedCharacterModel: CharacterModel;
 
@@ -111,11 +111,11 @@ When("I attempt to update a character with an unsupported field status", async (
   existingCharacterId = await createCharacterWithValidPayload(ctx.characterApi);
 
   // Intentar actualizar con el campo status (no soportado)
-  updatePayload = {
+  const invalidPayload = {
     status: "ACTIVE" as any, // Campo prohibido en PATCH
-  };
+  } as any;
   
-  response = await ctx.characterApi.updateCharacter(existingCharacterId, updatePayload);
+  response = await ctx.characterApi.updateCharacter(existingCharacterId, invalidPayload);
 });
 
 When("I update a character with invalid name type {word}", async (type: string) => {

@@ -21,3 +21,5 @@ export const VALID_CATEGORIES = [
 ] as const;
 
 export type CategoryName = typeof VALID_CATEGORIES[number];
+
+export type CharacterId = string;

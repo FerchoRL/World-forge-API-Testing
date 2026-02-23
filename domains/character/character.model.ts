@@ -12,14 +12,15 @@
  */
 
 import { Status } from "../../contracts/common/status";
-import { CategoryName } from "./character.types";
+import { CategoryName, CharacterId } from "./character.types";
 
 export type CharacterModel = {
-  id: string;
+  id: CharacterId;
   name: string;
   status: Status;
   categories: CategoryName[];
   identity: string;
   inspirations: string[];
   notes?: string;
+  image?: string;
 };
