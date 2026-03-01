@@ -4,7 +4,7 @@ import { expect, type APIResponse } from "@playwright/test";
 import { ctx } from "../character.common.steps";
 import { disposeCharacterContext } from "../character.context";
 
-import { CharacterApi, type CharacterDTO, type CreateCharacterRequest, type GetCharacterByIdResponse } from "../character.api";
+import { CharacterApi, type CharacterDTO, type CreateCharacterRequest, type CreateCharacterResponse, type GetCharacterByIdResponse } from "../character.api";
 import type { CharacterModel } from "../character.model";
 import { generateWaifuName } from "../character-name.generator";
 
@@ -35,7 +35,7 @@ When("I create a character with a valid payload", async () => {
 
   response = await ctx.characterApi.createCharacter(payload);
 
-  responseBody = (await response.json()) as CharacterDTO;
+  responseBody = ((await response.json()) as CreateCharacterResponse).character;
   //Se mapea el responseBody a CharacterModel para usarlo en validaciones posteriores, como comparación con la base de datos o con la respuesta de get-by-id. Esto permite abstraer diferencias entre el formato API y el modelo de dominio.
   createdCharacterModel = mapApiToCharacterModel(responseBody);
 });
@@ -44,7 +44,7 @@ When("I create a character without status", async () => {
   payload = buildValidCharacterPayload({ status: undefined });
 
   response = await ctx.characterApi.createCharacter(payload);
-  responseBody = (await response.json()) as CharacterDTO;
+  responseBody = ((await response.json()) as CreateCharacterResponse).character;
 
   createdCharacterModel = mapApiToCharacterModel(responseBody);
 });
@@ -138,7 +138,7 @@ When("I create a character without notes", async () => {
 
   response = await ctx.characterApi.createCharacter(payload);
 
-  responseBody = (await response.json()) as CharacterDTO;
+  responseBody = ((await response.json()) as CreateCharacterResponse).character;
   createdCharacterModel = mapApiToCharacterModel(responseBody);
 });
 
@@ -168,7 +168,7 @@ When("I create a character with extra unknown fields", async () => {
 
   response = await ctx.characterApi.createCharacter(payload);
 
-  responseBody = (await response.json()) as CharacterDTO;
+  responseBody = ((await response.json()) as CreateCharacterResponse).character;
   createdCharacterModel = mapApiToCharacterModel(responseBody);
 });
 
@@ -199,7 +199,7 @@ When("I create a character reusing a name from an ARCHIVED character", async () 
   });
 
   response = await ctx.characterApi.createCharacter(payload);
-  responseBody = (await response.json()) as CharacterDTO;
+  responseBody = ((await response.json()) as CreateCharacterResponse).character;
   createdCharacterModel = mapApiToCharacterModel(responseBody);
 });
 

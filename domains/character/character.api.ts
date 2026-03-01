@@ -57,6 +57,18 @@ export type UpdateCharacterCoreInput = {
     image?: string
 }
 
+export type ChangeCharacterStatusRequest = {
+    status: 'ACTIVE' | 'ARCHIVED'
+}
+
+export type CreateCharacterResponse = {
+    character: CharacterDTO
+}
+
+export type ChangeCharacterStatusResponse = {
+    character: CharacterDTO
+}
+
 export type ListCharactersResponse = {
     characters: CharacterDTO[]
     page: number
@@ -102,6 +114,13 @@ export class CharacterApi {
     async updateCharacter(id: string, updates: UpdateCharacterCoreInput): Promise<APIResponse> {
         return this.api.patch(`/characters/${id}`, {
             data: updates,
+        })
+    }
+
+    // Método para cambiar el status de un personaje (acción de dominio)
+    async changeCharacterStatus(id: string, body: ChangeCharacterStatusRequest): Promise<APIResponse> {
+        return this.api.patch(`/characters/${id}/status`, {
+            data: body,
         })
     }
 

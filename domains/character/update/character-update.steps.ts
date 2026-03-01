@@ -4,7 +4,7 @@ import { expect, type APIResponse } from "@playwright/test";
 import { ctx } from "../character.common.steps";
 import { disposeCharacterContext } from "../character.context";
 
-import type { CharacterDTO, GetCharacterByIdResponse, UpdateCharacterCoreInput } from "../character.api";
+import type { CharacterDTO, CreateCharacterResponse, GetCharacterByIdResponse, UpdateCharacterCoreInput } from "../character.api";
 import type { CharacterModel } from "../character.model";
 
 import { createCharacterWithValidPayload } from "../character.test-helpers";
@@ -251,8 +251,8 @@ When("I attempt to update a character with an already existing name from status 
   const firstPayload = buildValidCharacterPayload({ name: firstCharacterName });
   firstPayload.status = sourceStatus;
   const firstResponse = await ctx.characterApi.createCharacter(firstPayload);
-  const firstCharacterBody = (await firstResponse.json()) as CharacterDTO;
-  expect(firstCharacterBody.id).toBeDefined();
+  const firstCharacterBody = (await firstResponse.json()) as CreateCharacterResponse;
+  expect(firstCharacterBody.character.id).toBeDefined();
 
   // Crear segundo character que intentaremos actualizar
   existingCharacterId = await createCharacterWithValidPayload(ctx.characterApi);
