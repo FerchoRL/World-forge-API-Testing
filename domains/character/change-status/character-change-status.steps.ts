@@ -3,9 +3,10 @@ import { expect, type APIResponse } from "@playwright/test";
 
 import { ctx } from "../character.common.steps";
 import { disposeCharacterContext } from "../character.context";
-import type { ChangeCharacterStatusResponse, CharacterDTO, CreateCharacterResponse } from "../character.api";
-import { buildValidCharacterPayload } from "../create/character-create.payload";
+import type { ChangeCharacterStatusResponse, CharacterDTO } from "../character.api";
+import { createCharacterWithStatus, transitionCharacterToArchived } from "../character.test-helpers";
 import { closeDatabase } from "../../../utils/db/mongo/mongo.client";
+import { attachJsonReport } from "../../../utils/reporting/cucumber-report.helper";
 
 let response: APIResponse;
 let responseBody: CharacterDTO;
@@ -21,31 +22,14 @@ When("I request to change character status from {string} to {string}", async fun
     const fromStatus = from.trim().toUpperCase();
     const toStatus = to.trim().toUpperCase() as "ACTIVE" | "ARCHIVED";
 
-    // Crea el character base en el estado inicial más cercano al escenario.
-    const initialCreateStatus = fromStatus === "DRAFT" ? undefined : "ACTIVE";
-
-    const createResponse = await ctx.characterApi.createCharacter(
-        buildValidCharacterPayload({
-            status: initialCreateStatus,
-        })
-    );
-    const createStatusCode = createResponse.status();
-    expect(createStatusCode).toBe(201);
-
-    const created = (await createResponse.json()) as CreateCharacterResponse;
-    sourceCharacterId = created.character.id;
-    let characterBeforeChange: CharacterDTO = created.character;
+    // Creamos el character inicial según el estado de origen del escenario.
+    const initialCreateStatus = fromStatus === "DRAFT" ? "DRAFT" : "ACTIVE";
+    let characterBeforeChange: CharacterDTO = await createCharacterWithStatus(ctx.characterApi, initialCreateStatus);
+    sourceCharacterId = characterBeforeChange.id;
 
     // Si el escenario parte de ARCHIVED, primero hacemos esa transición.
-    let archiveStatusCode: number | undefined;
     if (fromStatus === "ARCHIVED") {
-        const archiveResponse = await ctx.characterApi.changeCharacterStatus(sourceCharacterId, {
-            status: "ARCHIVED",
-        });
-        archiveStatusCode = archiveResponse.status();
-        expect(archiveStatusCode).toBe(200);
-        const archivedBody = (await archiveResponse.json()) as ChangeCharacterStatusResponse;
-        characterBeforeChange = archivedBody.character;
+        characterBeforeChange = await transitionCharacterToArchived(ctx.characterApi, sourceCharacterId);
     }
 
     // Acción bajo prueba: cambio final de estado solicitado.
@@ -57,17 +41,10 @@ When("I request to change character status from {string} to {string}", async fun
     responseBody = responseRawBody.character;
     const characterAfterChange: CharacterDTO = responseBody;
 
-    await this.attach(
-        JSON.stringify(
-            {
-                characterBeforeChange,
-                characterAfterChange,
-            },
-            null,
-            2
-        ),
-        "application/json"
-    );
+    await attachJsonReport(this, {
+        characterBeforeChange,
+        characterAfterChange,
+    });
 });
 
 When(/^I request to change character status using raw id "([^"]*)" to "([^"]*)"$/, async function (id: string, to: string) {
@@ -85,23 +62,16 @@ When(/^I request to change character status using raw id "([^"]*)" to "([^"]*)"$
     const rawBody = (await response.json()) as { error?: string };
     responseErrorMessage = rawBody?.error;
 
-    await this.attach(
-        JSON.stringify(
-            {
-                request: {
-                    id: resolvedId,
-                    status: toStatus,
-                },
-                response: {
-                    statusCode: response.status(),
-                    body: rawBody,
-                },
-            },
-            null,
-            2
-        ),
-        "application/json"
-    );
+    await attachJsonReport(this, {
+        request: {
+            id: resolvedId,
+            status: toStatus,
+        },
+        response: {
+            statusCode: response.status(),
+            body: rawBody,
+        },
+    });
 });
 
 // -----------------------------
