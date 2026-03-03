@@ -62,3 +62,11 @@ Feature: Character – Change Status (PATCH /characters/:id/status)
       | false |
       | null  |
       | abc   |
+
+  @tc-char-change-status-08
+  Scenario: TC-CHAR-CHANGE-STATUS-08 – Reactivation uniqueness conflict – Returns 409
+    When I archive a new active character for reactivation conflict validation
+    And I create a new active character with the archived character name
+    And I request to reactivate the archived character
+    Then the change character status request should return status code 409
+    And the change character status error should be "Character name already exists for an ACTIVE or DRAFT character"

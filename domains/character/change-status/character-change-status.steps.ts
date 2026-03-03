@@ -4,7 +4,11 @@ import { expect, type APIResponse } from "@playwright/test";
 import { ctx } from "../character.common.steps";
 import { disposeCharacterContext } from "../character.context";
 import type { ChangeCharacterStatusResponse, CharacterDTO } from "../character.api";
-import { createCharacterWithStatus, transitionCharacterToArchived } from "../character.test-helpers";
+import {
+    createCharacterWithNameAndStatus,
+    createCharacterWithStatus,
+    transitionCharacterToArchived,
+} from "../character.test-helpers";
 import { closeDatabase } from "../../../utils/db/mongo/mongo.client";
 import { attachJsonReport } from "../../../utils/reporting/cucumber-report.helper";
 
@@ -12,6 +16,8 @@ let response: APIResponse;
 let responseBody: CharacterDTO;
 let sourceCharacterId: string;
 let responseErrorMessage: string | undefined;
+let archivedCharacterName: string;
+let conflictingActiveCharacterId: string;
 
 // -----------------------------
 // WHEN steps
@@ -105,6 +111,56 @@ When(/^I request to change character status using invalid status "([^"]*)"$/, as
             id: sourceCharacterId,
             status: invalidStatus,
         },
+        response: {
+            statusCode: response.status(),
+            body: rawBody,
+        },
+    });
+});
+
+When("I archive a new active character for reactivation conflict validation", async function () {
+    // Creamos el character base en ACTIVE.
+    const activeCharacter = await createCharacterWithStatus(ctx.characterApi, "ACTIVE");
+    sourceCharacterId = activeCharacter.id;
+    archivedCharacterName = activeCharacter.name;
+
+    // Lo llevamos a ARCHIVED para intentar reactivarlo después.
+    const archivedCharacter = await transitionCharacterToArchived(ctx.characterApi, sourceCharacterId);
+
+    await attachJsonReport(this, {
+        activeCharacter,
+        archivedCharacter,
+    });
+});
+
+When("I create a new active character with the archived character name", async function () {
+    // Creamos un segundo ACTIVE con el mismo nombre para provocar conflicto de unicidad.
+    const conflictingCharacter = await createCharacterWithNameAndStatus(
+        ctx.characterApi,
+        archivedCharacterName,
+        "ACTIVE"
+    );
+    conflictingActiveCharacterId = conflictingCharacter.id;
+
+    await attachJsonReport(this, {
+        archivedCharacterName,
+        conflictingCharacter,
+    });
+});
+
+When("I request to reactivate the archived character", async function () {
+    // Intentamos ARCHIVED -> ACTIVE sobre el character original.
+    response = await ctx.characterApi.changeCharacterStatus(sourceCharacterId, {
+        status: "ACTIVE",
+    });
+
+    const rawBody = (await response.json()) as { error?: string };
+    responseErrorMessage = rawBody?.error;
+
+    await attachJsonReport(this, {
+        archivedCharacterId: sourceCharacterId,
+        archivedCharacterName,
+        conflictingActiveCharacterId,
         response: {
             statusCode: response.status(),
             body: rawBody,

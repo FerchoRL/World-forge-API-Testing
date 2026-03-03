@@ -222,24 +222,7 @@ Expected Result:
 
 ---
 
-### TC-CHAR-CHANGE-STATUS-08 – Character not found on update – Returns 404
-
-Descripción:
-
-Cuando el character desaparece/no existe al intentar persistir el cambio (inconsistencia infra), debe responder `404`.
-
-Expected Result:
-
-- Status Code: 404
-- Response body:
-
-```json
-{ "error": "Character not found" }
-```
-
----
-
-### TC-CHAR-CHANGE-STATUS-09 – Reactivation uniqueness conflict – Returns 409
+### TC-CHAR-CHANGE-STATUS-08 – Reactivation uniqueness conflict – Returns 409
 
 Descripción:
 
@@ -252,42 +235,6 @@ Expected Result:
 
 ```json
 { "error": "Character name already exists for an ACTIVE or DRAFT character" }
-```
-
----
-
-### TC-CHAR-CHANGE-STATUS-10 – DB schema validation error – Returns 400
-
-Descripción:
-
-Cuando la capa de persistencia retorna `ValidationError` (esquema), el endpoint debe mapearlo a `400`.
-
-Expected Result:
-
-- Status Code: 400
-- Response body:
-
-```json
-{ "error": "Validation error while changing character status" }
-```
-
-_o mensaje específico de Mongoose._
-
----
-
-### TC-CHAR-CHANGE-STATUS-11 – Unmapped infrastructure error – Returns 500
-
-Descripción:
-
-Cuando ocurre un error técnico no mapeado durante el cambio de estado, el endpoint debe responder `500`.
-
-Expected Result:
-
-- Status Code: 500
-- Response body:
-
-```json
-{ "error": "Error changing character status in database" }
 ```
 
 ---
@@ -305,12 +252,10 @@ Expected Result:
 - `id` vacío/en blanco
 - `status` inválido en request
 - transición no permitida
-- error de validación de esquema en DB
 
 ### 🔍 Recurso no encontrado (404 Not Found)
 
 - character no existe en lectura (`Character {id} not found`)
-- character no existe al persistir update (`Character not found`)
 
 ### ⚠️ Conflicto (409 Conflict)
 
@@ -318,7 +263,7 @@ Expected Result:
 
 ### 💥 Error interno (500 Internal Server Error)
 
-- error técnico de infraestructura no mapeado
+- No cubierto en esta suite
 
 **Notas importantes:**
 

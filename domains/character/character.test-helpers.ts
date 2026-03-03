@@ -51,6 +51,27 @@ export async function createCharacterWithStatus(
 }
 
 /**
+ * Crea un character con nombre y status explícitos.
+ *
+ * @param characterApi - Cliente API de character
+ * @param name - Nombre que debe usar el character
+ * @param status - Status inicial para crear el character
+ * @returns Character creado por la API
+ */
+export async function createCharacterWithNameAndStatus(
+  characterApi: CharacterApi,
+  name: string,
+  status: CreateCharacterInput["status"]
+): Promise<CharacterDTO> {
+  // Reutilizamos payload válido y solo forzamos name/status para el escenario.
+  const payload = buildValidCharacterPayload({ name, status });
+
+  const response = await characterApi.createCharacter(payload);
+  const body = (await response.json()) as CreateCharacterResponse;
+  return body.character;
+}
+
+/**
  * Hace la transición de un character existente a ARCHIVED.
  *
  * @param characterApi - Cliente API de character
