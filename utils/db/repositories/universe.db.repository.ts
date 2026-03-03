@@ -1,5 +1,4 @@
 import type { UniverseMongoDocument } from "../../../domains/universe/universe.db";
-import type { Status } from "../../../contracts/common/status";
 import { getDatabase } from "../mongo/mongo.client";
 
 const COLLECTION_NAME = "universes";
