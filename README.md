@@ -204,3 +204,58 @@ Existe pero no es el principal (solo orquesta Cucumber).
 ## 11: Revisar el reporte
 
 Después de la ejecución, el reporte HTML se genera automáticamente en: `reports/cucumber-report.html`
+
+## 12. Versionado y Release (GitHub)
+
+Este proyecto usará versionado semántico (SemVer):
+
+- `MAJOR`: cambios incompatibles.
+- `MINOR`: nuevas funcionalidades compatibles.
+- `PATCH`: correcciones compatibles.
+
+### Primer tag recomendado
+
+Como es el primer release estable del proyecto de tests, se recomienda iniciar con:
+
+- `v1.0.0`
+
+### Checklist antes de crear el tag
+
+- Cambios mergeados en `main`.
+- Tests principales ejecutados y en verde.
+- README y documentación de escenarios actualizados.
+- Sin cambios pendientes (`git status` limpio).
+
+### Flujo sugerido para crear release
+
+1. Asegurar rama actualizada:
+
+```bash
+git checkout main
+git pull origin main
+```
+
+1. Crear tag anotado:
+
+```bash
+git tag -a v1.0.0 -m "Release v1.0.0"
+```
+
+1. Publicar el tag:
+
+```bash
+git push origin v1.0.0
+```
+
+1. Crear Release en GitHub:
+
+- Ir a `Releases` → `Draft a new release`.
+- Seleccionar tag `v1.0.0`.
+- Título sugerido: `World-Forge API Tests v1.0.0`.
+- Incluir resumen de cambios (features cubiertas, fixes y mejoras de reporting).
+
+### Recomendación para siguientes versiones
+
+- `v1.0.1`: fixes menores en tests o reportes.
+- `v1.1.0`: nuevos dominios o nuevos test cases.
+- `v2.0.0`: cambios de estructura o breaking changes en contrato/flujo de testing.
