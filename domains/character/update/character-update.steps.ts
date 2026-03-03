@@ -18,6 +18,7 @@ import {
 
 import { findCharacterById } from "../../../utils/db/repositories/character.db.repository";
 import { closeDatabase } from "../../../utils/db/mongo/mongo.client";
+import { attachJsonReport } from "../../../utils/reporting/cucumber-report.helper";
 import { buildInvalidCharacterPayload, buildValidCharacterPayload } from "../create/character-create.payload";
 
 let response: APIResponse;
@@ -317,17 +318,10 @@ Then("the updated character should be stored in the database", async function ()
 
   const dbModel = mapMongoToCharacterModel(dbCharacter);
 
-  await this.attach(
-    JSON.stringify(
-      {
-        updatedCharacterModel,
-        dbModel,
-      },
-      null,
-      2
-    ),
-    "application/json"
-  );
+  await attachJsonReport(this as any, {
+    updatedCharacterModel,
+    dbModel,
+  });
 
   expect(updatedCharacterModel).toEqual(dbModel);
 });
@@ -343,18 +337,11 @@ Then("the character update should fail with status {int}", async (expectedStatus
 Then("the updated character error message should be {string}", async function (expectedMessage: string) {
   const body = await response.json();
 
-  await this.attach(
-    JSON.stringify(
-      {
-        requestPayload: updatePayload,
-        responseStatus: response.status(),
-        responseBody: body,
-      },
-      null,
-      2
-    ),
-    "application/json"
-  );
+  await attachJsonReport(this as any, {
+    requestPayload: updatePayload,
+    responseStatus: response.status(),
+    responseBody: body,
+  });
 
   expect(body).toEqual({
     error: expectedMessage,

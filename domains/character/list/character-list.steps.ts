@@ -8,6 +8,7 @@ import { ctx } from "../character.common.steps";
 import { expectInternalServerError } from "../../../utils/assertions";
 import { VALID_STATUSES } from "../../../contracts/common/status";
 import { VALID_CATEGORIES } from "../character.types";
+import { attachJsonReport } from "../../../utils/reporting/cucumber-report.helper";
 
 let response: APIResponse;
 let responseBodyList: ListCharactersResponse;
@@ -121,19 +122,12 @@ Then("the response should return a 400 error with message {string}", async funct
   
   const errorBody = await response.json();
   
-  await this.attach(
-    JSON.stringify(
-      {
-        requestUrl: response.url(),
-        responseStatus: response.status(),
-        responseBody: errorBody,
-        expectedMessage: expectedMessage,
-      },
-      null,
-      2
-    ),
-    "application/json"
-  );
+  await attachJsonReport(this as any, {
+    requestUrl: response.url(),
+    responseStatus: response.status(),
+    responseBody: errorBody,
+    expectedMessage: expectedMessage,
+  });
   
   expect(errorBody).toHaveProperty("error");
   expect(errorBody.error).toBe(expectedMessage);

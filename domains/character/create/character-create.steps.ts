@@ -4,7 +4,7 @@ import { expect, type APIResponse } from "@playwright/test";
 import { ctx } from "../character.common.steps";
 import { disposeCharacterContext } from "../character.context";
 
-import { CharacterApi, type CharacterDTO, type CreateCharacterRequest, type CreateCharacterResponse, type GetCharacterByIdResponse } from "../character.api";
+import { type CharacterDTO, type CreateCharacterRequest, type CreateCharacterResponse, type GetCharacterByIdResponse } from "../character.api";
 import type { CharacterModel } from "../character.model";
 import { generateWaifuName } from "../character-name.generator";
 
@@ -17,6 +17,7 @@ import {
 
 import { findCharacterById } from "../../../utils/db/repositories/character.db.repository";
 import { closeDatabase } from "../../../utils/db/mongo/mongo.client";
+import { attachJsonReport } from "../../../utils/reporting/cucumber-report.helper";
 
 let response: APIResponse;
 let responseBody: CharacterDTO;
@@ -193,8 +194,27 @@ When("I create a character with duplicated name against status {string}", async 
 });
 
 When("I create a character reusing a name from an ARCHIVED character", async () => {
+  const reusableName = generateWaifuName();
+
+  // 1) Creamos un character ACTIVE con nombre único.
+  const sourcePayload = buildValidCharacterPayload({
+    name: reusableName,
+    status: "ACTIVE",
+  });
+
+  const sourceResponse = await ctx.characterApi.createCharacter(sourcePayload);
+  expect(sourceResponse.status()).toBe(201);
+  const sourceCharacter = ((await sourceResponse.json()) as CreateCharacterResponse).character;
+
+  // 2) Lo archivamos para liberar el nombre.
+  const archiveResponse = await ctx.characterApi.changeCharacterStatus(sourceCharacter.id, {
+    status: "ARCHIVED",
+  });
+  expect(archiveResponse.status()).toBe(200);
+
+  // 3) Reutilizamos el mismo nombre en un nuevo character ACTIVE.
   payload = buildValidCharacterPayload({
-    name: "Hu Tao",
+    name: reusableName,
     status: "ACTIVE",
   });
 
@@ -229,17 +249,10 @@ Then("the created character should match the payload", async function () {
     status: payload.status ?? responseBody.status,
   };
 
-  await (this as any).attach(
-    JSON.stringify(
-      {
-        expected: expectedModel,
-        actual: createdCharacterModel,
-      },
-      null,
-      2,
-    ),
-    "application/json",
-  );
+  await attachJsonReport(this as any, {
+    expected: expectedModel,
+    actual: createdCharacterModel,
+  });
 
   expect(createdCharacterModel).toEqual(expectedModel);
 });
@@ -256,17 +269,10 @@ Then("the created character should be stored in the database", async function ()
 
   const dbModel = mapMongoToCharacterModel(dbCharacter);
 
-  await this.attach(
-    JSON.stringify(
-      {
-        apiModel: createdCharacterModel,
-        dbModel,
-      },
-      null,
-      2,
-    ),
-    "application/json",
-  );
+  await attachJsonReport(this as any, {
+    apiModel: createdCharacterModel,
+    dbModel,
+  });
 
   expect(createdCharacterModel).toEqual(dbModel);
 },
@@ -299,20 +305,13 @@ Then("the status error message should include the invalid status value", async f
   const invalidStatus = (payload as any)?.status;
   const expectedError = `Status ${invalidStatus} is not valid. Allowed values: DRAFT | ACTIVE`;
 
-  await this.attach(
-    JSON.stringify(
-      {
-        requestPayload: payload,
-        invalidStatus,
-        expectedError,
-        responseStatus: response.status(),
-        responseBody: body,
-      },
-      null,
-      2
-    ),
-    "application/json"
-  );
+  await attachJsonReport(this as any, {
+    requestPayload: payload,
+    invalidStatus,
+    expectedError,
+    responseStatus: response.status(),
+    responseBody: body,
+  });
 
   expect(body).toEqual({
     error: expectedError,
@@ -323,18 +322,11 @@ Then("the character error message should be {string}", async function (expectedM
 
   const body = await response.json();
 
-  await this.attach(
-    JSON.stringify(
-      {
-        requestPayload: payload,
-        responseStatus: response.status(),
-        responseBody: body,
-      },
-      null,
-      2
-    ),
-    "application/json"
-  );
+  await attachJsonReport(this as any, {
+    requestPayload: payload,
+    responseStatus: response.status(),
+    responseBody: body,
+  });
 
   expect(body).toEqual({
     error: expectedMessage,

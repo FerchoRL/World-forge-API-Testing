@@ -10,6 +10,7 @@ import { findCharacterById } from "../../../utils/db/repositories/character.db.r
 import { closeDatabase } from "../../../utils/db/mongo/mongo.client";
 import { mapApiToCharacterModel, mapMongoToCharacterModel } from "../character.mapper";
 import { VALID_CATEGORIES } from "../character.types";
+import { attachJsonReport } from "../../../utils/reporting/cucumber-report.helper";
 
 let response: APIResponse;
 let responseBodyGetById: GetCharacterByIdResponse;
@@ -95,20 +96,13 @@ Then("the get by id response should return a {int} error with message {string}",
   
   const errorBody = await response.json();
   
-  await this.attach(
-    JSON.stringify(
-      {
-        requestUrl: response.url(),
-        responseStatus: response.status(),
-        responseBody: errorBody,
-        expectedStatus: expectedStatus,
-        expectedMessage: expectedMessage,
-      },
-      null,
-      2
-    ),
-    "application/json"
-  );
+  await attachJsonReport(this as any, {
+    requestUrl: response.url(),
+    responseStatus: response.status(),
+    responseBody: errorBody,
+    expectedStatus: expectedStatus,
+    expectedMessage: expectedMessage,
+  });
   
   expect(errorBody).toHaveProperty("error");
   expect(errorBody.error).toBe(expectedMessage);
@@ -128,17 +122,10 @@ Then("the response should match the character stored in the database", async fun
   const apiModel = mapApiToCharacterModel(apiCharacter);
   const dbModel = mapMongoToCharacterModel(dbCharacter);
 
-  await this.attach(
-    JSON.stringify(
-      {
-        apiModel,
-        dbModel,
-      },
-      null,
-      2
-    ),
-    "application/json"
-  );
+  await attachJsonReport(this as any, {
+    apiModel,
+    dbModel,
+  });
 
   /**
    * * 1️⃣ Validación estructural completa:
