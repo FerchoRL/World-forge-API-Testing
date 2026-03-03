@@ -18,6 +18,8 @@ let responseErrorMessage: string | undefined;
 // -----------------------------
 
 When("I request to change character status from {string} to {string}", async function (from: string, to: string) {
+    // Limpiamos estado compartido para evitar arrastre entre escenarios.
+    responseErrorMessage = undefined;
     // Normaliza estados para comparar/transicionar de forma consistente.
     const fromStatus = from.trim().toUpperCase();
     const toStatus = to.trim().toUpperCase() as "ACTIVE" | "ARCHIVED";
@@ -37,27 +39,38 @@ When("I request to change character status from {string} to {string}", async fun
         status: toStatus,
     });
 
-    const responseRawBody = (await response.json()) as ChangeCharacterStatusResponse;
-    responseBody = responseRawBody.character;
-    const characterAfterChange: CharacterDTO = responseBody;
+    const responseRawBody = (await response.json()) as {
+        character?: CharacterDTO;
+        error?: string;
+    };
+
+    let characterAfterChange: CharacterDTO | undefined;
+    if (response.status() >= 400) {
+        responseErrorMessage = responseRawBody.error;
+    } else {
+        responseBody = (responseRawBody as ChangeCharacterStatusResponse).character;
+        characterAfterChange = responseBody;
+    }
 
     await attachJsonReport(this, {
         characterBeforeChange,
         characterAfterChange,
+        responseErrorMessage,
     });
 });
 
-When(/^I request to change character status using raw id "([^"]*)" to "([^"]*)"$/, async function (id: string, to: string) {
-    // Traduce token especial a un id en blanco real para probar validación.
+When(/^I request to change character status using id "([^"]*)"$/, async function (id: string) {
+    // Soportamos id en blanco para TC04.
     const resolvedId = id === "__SPACE__" ? " " : id;
-    const toStatus = to.trim().toUpperCase() as "ACTIVE" | "ARCHIVED";
 
-    // Ejecuta request directo para controlar exactamente el id enviado en la URL.
-    response = await ctx.apiContext.patch(`/characters/${resolvedId}/status`, {
-        data: {
-            status: toStatus,
-        },
-    });
+    // Si el id está en blanco validamos solo path; para ids no existentes enviamos payload mínimo.
+    if (!resolvedId.trim()) {
+        response = await ctx.apiContext.patch(`/characters/${resolvedId}/status`);
+    } else {
+        response = await ctx.characterApi.changeCharacterStatus(resolvedId, {
+            status: "ACTIVE",
+        });
+    }
 
     const rawBody = (await response.json()) as { error?: string };
     responseErrorMessage = rawBody?.error;
@@ -65,7 +78,6 @@ When(/^I request to change character status using raw id "([^"]*)" to "([^"]*)"$
     await attachJsonReport(this, {
         request: {
             id: resolvedId,
-            status: toStatus,
         },
         response: {
             statusCode: response.status(),
@@ -73,6 +85,33 @@ When(/^I request to change character status using raw id "([^"]*)" to "([^"]*)"$
         },
     });
 });
+
+When(/^I request to change character status using invalid status "([^"]*)"$/, async function (invalidStatus: string) {
+    // Creamos un character válido antes de probar status inválido.
+    const createdCharacter = await createCharacterWithStatus(ctx.characterApi, "ACTIVE");
+    sourceCharacterId = createdCharacter.id;
+
+    // Enviamos el status inválido directo para validar la regla del endpoint.
+    response = await ctx.characterApi.changeCharacterStatus(sourceCharacterId, {
+        status: invalidStatus as any,
+    });
+
+    const rawBody = (await response.json()) as { error?: string };
+    responseErrorMessage = rawBody?.error;
+
+    await attachJsonReport(this, {
+        characterBeforeChange: createdCharacter,
+        request: {
+            id: sourceCharacterId,
+            status: invalidStatus,
+        },
+        response: {
+            statusCode: response.status(),
+            body: rawBody,
+        },
+    });
+});
+
 
 // -----------------------------
 // THEN steps

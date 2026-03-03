@@ -19,7 +19,7 @@ Feature: Character – Change Status (PATCH /characters/:id/status)
 
   @tc-char-change-status-04
   Scenario Outline: TC-CHAR-CHANGE-STATUS-04 – Empty/blank id – Returns 400
-    When I request to change character status using raw id "<id>" to "ACTIVE"
+    When I request to change character status using id "<id>"
     Then the change character status request should return status code 400
     And the change character status error should be "Character id is required"
 
@@ -28,9 +28,32 @@ Feature: Character – Change Status (PATCH /characters/:id/status)
       | %20       |
       | __SPACE__ |
 
+  @tc-char-change-status-05
+  Scenario Outline: TC-CHAR-CHANGE-STATUS-05 – Invalid status in request – Returns 400
+    When I request to change character status using invalid status "<status>"
+    Then the change character status request should return status code 400
+    And the change character status error should be "Status must be ACTIVE or ARCHIVED"
+
+    Examples:
+      | status  |
+      |     123 |
+      | INVALID |
+      | active  |
+
+  @tc-char-change-status-06
+  Scenario Outline: TC-CHAR-CHANGE-STATUS-06 – Transition not allowed – Returns 400
+    When I request to change character status from "<from>" to "<to>"
+    Then the change character status request should return status code 400
+    And the change character status error should be "Status transition <from> -> <to> is not allowed"
+
+    Examples:
+      | from     | to       |
+      | ACTIVE   | ACTIVE   |
+      | ARCHIVED | ARCHIVED |
+
   @tc-char-change-status-07
   Scenario Outline: TC-CHAR-CHANGE-STATUS-07 – Non-existing string id – Returns 404
-    When I request to change character status using raw id "<id>" to "ACTIVE"
+    When I request to change character status using id "<id>"
     Then the change character status request should return status code 404
     And the change character status error should be "Character <id> not found"
 
