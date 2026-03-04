@@ -124,3 +124,38 @@ Feature: Universe – Create (POST /universes)
       | value |
       | ""    |
       | "   " |
+
+  @tc-universe-create-11
+  Scenario Outline: TC-UNIVERSE-CREATE-11 – Invalid status (not DRAFT|ACTIVE) – Returns 400
+    When I create a universe with invalid status <status>
+    Then the universe create endpoint should respond with status code 400
+    And the universe create error message should be "Status <status> is not valid. Allowed values: DRAFT | ACTIVE"
+
+    Examples:
+      | status       |
+      | ARCHIVED     |
+      | empty        |
+      | spaces       |
+      | null         |
+      | booleanFalse |
+      | booleanTrue  |
+
+  @tc-universe-create-12
+  Scenario Outline: TC-UNIVERSE-CREATE-12 – Duplicate name against ACTIVE/DRAFT universe (partial unique index) – Returns 409
+    When I create a universe with duplicated name against status <status>
+    Then the universe create endpoint should respond with status code 409
+    And the universe create error message should be "Universe name already exists for an ACTIVE or DRAFT universe"
+
+    Examples:
+      | status |
+      | ACTIVE |
+      | DRAFT  |
+
+  @tc-universe-create-13
+  Scenario: TC-UNIVERSE-CREATE-13 – Extra unknown fields – Ignored
+    When I create a universe with extra unknown fields
+    Then the universe create endpoint should respond with status code 201
+    And the universe response should contain the expected properties
+    And the universe response properties should have the correct types
+    And the created universe should not contain unknown fields
+    And the created universe should be stored in the database

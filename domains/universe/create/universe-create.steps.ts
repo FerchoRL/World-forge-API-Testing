@@ -9,6 +9,7 @@ import type {
   UniverseDTO,
 } from "../universe.api";
 import { buildInvalidUniversePayload, buildValidUniversePayload } from "./universe-create.payload";
+import { createUniverseWithNameAndStatus } from "../universe.test-helpers";
 import { findUniverseById } from "../../../utils/db/repositories/universe.db.repository";
 import { closeDatabase } from "../../../utils/db/mongo/mongo.client";
 import { attachJsonReport } from "../../../utils/reporting/cucumber-report.helper";
@@ -103,6 +104,43 @@ When("I create a universe with invalid notes value {string}", async (value: stri
   response = await ctx.universeApi.createUniverse(payload);
 });
 
+When("I create a universe with invalid status {word}", async (invalidStatus: string) => {
+  payload = buildInvalidUniversePayload("status", "invalidEnum", {
+    invalidValue: invalidStatus,
+  }) as any;
+
+  response = await ctx.universeApi.createUniverse(payload);
+});
+
+When("I create a universe with duplicated name against status {word}", async (status: string) => {
+  const sourceStatus = status.trim().toUpperCase() as "ACTIVE" | "DRAFT";
+  const duplicateName = buildValidUniversePayload().name;
+
+  await createUniverseWithNameAndStatus(ctx.universeApi, duplicateName, sourceStatus);
+
+  payload = buildValidUniversePayload({
+    name: duplicateName,
+    status: "ACTIVE",
+  });
+
+  response = await ctx.universeApi.createUniverse(payload);
+});
+
+When("I create a universe with extra unknown fields", async () => {
+  payload = buildValidUniversePayload();
+
+  const payloadWithUnknownFields = {
+    ...payload,
+    cosmicTier: "MYTHIC",
+    originMetadata: {
+      source: "bdd-test",
+    },
+  } as any;
+
+  response = await ctx.universeApi.createUniverse(payloadWithUnknownFields);
+  responseBody = ((await response.json()) as CreateUniverseResponse).universe;
+});
+
 Then("the universe create endpoint should respond with status code {int}", async (expectedStatusCode: number) => {
   expect(response.status()).toBe(expectedStatusCode);
 });
@@ -182,6 +220,11 @@ Then("the created universe should be stored in the database", async function () 
 
   expect(responseBody.rules ?? []).toEqual(persistedUniverse.rules ?? []);
   expect(responseBody.notes).toBe(persistedUniverse.notes);
+});
+
+Then("the created universe should not contain unknown fields", async () => {
+  expect(responseBody).not.toHaveProperty("cosmicTier");
+  expect(responseBody).not.toHaveProperty("originMetadata");
 });
 
 Then("the universe create error message should be {string}", async function (expectedMessage: string) {

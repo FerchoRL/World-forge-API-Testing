@@ -11,9 +11,10 @@ Validar el comportamiento del endpoint de creación de universos, asegurando que
 - Valida campos obligatorios (`name`, `premise`).
 - Valida reglas de `rules` (tipo, contenido y duplicados).
 - Valida reglas de `notes` cuando se envía.
+- Valida comportamiento ante campos extra fuera del contrato.
 - Mantiene un contrato HTTP consistente.
 - Persiste correctamente en base de datos.
-- Maneja errores de validación (400), conflicto de persistencia (409) y errores internos (500).
+- Maneja errores de validación (400) y conflicto de persistencia (409).
 
 Este endpoint expone errores de validación (400) cuando el input no cumple las reglas de negocio.
 
@@ -200,27 +201,17 @@ Expected Result:
 - Status Code: 409
 - Error exacto: `Universe name already exists for an ACTIVE or DRAFT universe`
 
-### TC-UNIVERSE-CREATE-13 – Mongoose validation error while creating – Returns 500
+### TC-UNIVERSE-CREATE-13 – Extra unknown fields – Ignored
 
 Descripción:
 
-Si ocurre un error de validación de Mongoose en persistencia, debe retornarse su mensaje o fallback definido.
+Si se envían campos adicionales no definidos en el contrato, el backend debe ignorarlos y crear el universe correctamente.
 
 Expected Result:
 
-- Status Code: 500
-- Error: `err.message` de Mongoose o fallback `Validation error while creating universe`
-
-### TC-UNIVERSE-CREATE-14 – Unexpected database error while creating – Returns 500
-
-Descripción:
-
-Si ocurre un error inesperado de DB, debe retornarse su mensaje o fallback definido.
-
-Expected Result:
-
-- Status Code: 500
-- Error: `err.message` o fallback `Error creating universe in database`
+- Status Code: 201
+- Response body contiene `{ universe: UniverseDTO }`
+- Campos extra no aparecen en la respuesta
 
 ---
 
@@ -233,6 +224,7 @@ Expected Result:
 |---|---|
 | crear universe con valores mínimos (name + premise) | `{ universe: UniverseDTO }` con `status = DRAFT` |
 | payload completo con `status = DRAFT` o `status = ACTIVE` | `{ universe: UniverseDTO }` |
+| payload con campos extra desconocidos | `{ universe: UniverseDTO }` sin campos extra |
 
 ### ❌ Errores de validación (400 Bad Request)
 
@@ -255,14 +247,6 @@ Expected Result:
 
 |---|---|
 | name duplicado en universo ACTIVE/DRAFT | `Universe name already exists for an ACTIVE or DRAFT universe` |
-
-### 💥 Errores internos (500 Internal Server Error)
-
-| Escenario | Error esperado |
-
-|---|---|
-| Validación Mongoose en create | `err.message` o `Validation error while creating universe` |
-| Error inesperado de BD | `err.message` o `Error creating universe in database` |
 
 ## Notas importantes
 
