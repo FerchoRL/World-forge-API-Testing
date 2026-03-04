@@ -114,78 +114,42 @@ Expected Result:
 - Response body contiene `{ universe: UniverseDTO }`
 - `universe.status` coincide con el valor enviado (`DRAFT` o `ACTIVE`)
 
-### TC-UNIVERSE-CREATE-03 – Valid rules array – Returns 201 with rules
-
-Descripción:
-
-`rules` válido (array de strings no vacíos y sin duplicados) debe aceptarse.
-
-Expected Result:
-
-- Status Code: 201
-- Response body contiene `{ universe: UniverseDTO }`
-- `universe.rules` presente y coincide con payload
-
-### TC-UNIVERSE-CREATE-04 – rules empty array – Returns 201
-
-Descripción:
-
-`rules: []` actualmente es válido y debe aceptarse.
-
-Expected Result:
-
-- Status Code: 201
-- Response body contiene `{ universe: UniverseDTO }`
-- `universe.rules = []`
-
-### TC-UNIVERSE-CREATE-05 – Valid notes – Returns 201 with notes
-
-Descripción:
-
-`notes` válido (string no vacío) debe aceptarse.
-
-Expected Result:
-
-- Status Code: 201
-- Response body contiene `{ universe: UniverseDTO }`
-- `universe.notes` presente y coincide con payload
-
-### TC-UNIVERSE-CREATE-06 – Invalid name (missing, non-string, empty/spaces) – Returns 400
+### TC-UNIVERSE-CREATE-03 – Invalid name (missing, non-string, empty/spaces) – Returns 400
 
 Expected Result:
 
 - Status Code: 400
 - Error exacto: `Universe name is required`
 
-### TC-UNIVERSE-CREATE-07 – Invalid premise (missing, non-string, empty/spaces) – Returns 400
+### TC-UNIVERSE-CREATE-04 – Invalid premise (missing, non-string, empty/spaces) – Returns 400
 
 Expected Result:
 
 - Status Code: 400
 - Error exacto: `Universe premise is required`
 
-### TC-UNIVERSE-CREATE-08 – rules is not array – Returns 400
+### TC-UNIVERSE-CREATE-05 – rules is not array – Returns 400
 
 Expected Result:
 
 - Status Code: 400
 - Error exacto: `Universe rules must be an array`
 
-### TC-UNIVERSE-CREATE-09 – rules contains non-string item – Returns 400
+### TC-UNIVERSE-CREATE-06 – rules contains non-string item – Returns 400
 
 Expected Result:
 
 - Status Code: 400
 - Error exacto: `Each universe rule must be a string`
 
-### TC-UNIVERSE-CREATE-10 – rules contains empty/blank string – Returns 400
+### TC-UNIVERSE-CREATE-07 – rules contains empty/blank string – Returns 400
 
 Expected Result:
 
 - Status Code: 400
 - Error exacto: `Universe rules cannot contain empty values`
 
-### TC-UNIVERSE-CREATE-11 – rules contains duplicates (case-insensitive, trim-aware) – Returns 400
+### TC-UNIVERSE-CREATE-08 – rules contains duplicates (case-insensitive, trim-aware) – Returns 400
 
 Descripción:
 
@@ -196,21 +160,21 @@ Expected Result:
 - Status Code: 400
 - Error exacto: `Universe rules must not contain duplicates`
 
-### TC-UNIVERSE-CREATE-12 – notes is not string – Returns 400
+### TC-UNIVERSE-CREATE-09 – notes is not string – Returns 400
 
 Expected Result:
 
 - Status Code: 400
 - Error exacto: `Universe notes must be a string`
 
-### TC-UNIVERSE-CREATE-13 – notes empty/blank – Returns 400
+### TC-UNIVERSE-CREATE-10 – notes empty/blank – Returns 400
 
 Expected Result:
 
 - Status Code: 400
 - Error exacto: `Universe notes cannot be empty`
 
-### TC-UNIVERSE-CREATE-14 – Invalid status (not DRAFT|ACTIVE) – Returns 400
+### TC-UNIVERSE-CREATE-11 – Invalid status (not DRAFT|ACTIVE) – Returns 400
 
 Descripción:
 
@@ -225,7 +189,7 @@ Ejemplo:
 
 - `Status ARCHIVED is not valid. Allowed values: DRAFT | ACTIVE`
 
-### TC-UNIVERSE-CREATE-15 – Duplicate name against ACTIVE/DRAFT universe (partial unique index) – Returns 409
+### TC-UNIVERSE-CREATE-12 – Duplicate name against ACTIVE/DRAFT universe (partial unique index) – Returns 409
 
 Descripción:
 
@@ -236,7 +200,7 @@ Expected Result:
 - Status Code: 409
 - Error exacto: `Universe name already exists for an ACTIVE or DRAFT universe`
 
-### TC-UNIVERSE-CREATE-16 – Mongoose validation error while creating – Returns 500
+### TC-UNIVERSE-CREATE-13 – Mongoose validation error while creating – Returns 500
 
 Descripción:
 
@@ -247,7 +211,7 @@ Expected Result:
 - Status Code: 500
 - Error: `err.message` de Mongoose o fallback `Validation error while creating universe`
 
-### TC-UNIVERSE-CREATE-17 – Unexpected database error while creating – Returns 500
+### TC-UNIVERSE-CREATE-14 – Unexpected database error while creating – Returns 500
 
 Descripción:
 
@@ -269,9 +233,6 @@ Expected Result:
 |---|---|
 | crear universe con valores mínimos (name + premise) | `{ universe: UniverseDTO }` con `status = DRAFT` |
 | payload completo con `status = DRAFT` o `status = ACTIVE` | `{ universe: UniverseDTO }` |
-| rules válido | `{ universe: UniverseDTO }` con `rules` |
-| rules vacío (`[]`) | `{ universe: UniverseDTO }` |
-| notes válido | `{ universe: UniverseDTO }` con `notes` |
 
 ### ❌ Errores de validación (400 Bad Request)
 

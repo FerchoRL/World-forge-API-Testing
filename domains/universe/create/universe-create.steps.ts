@@ -8,7 +8,7 @@ import type {
   CreateUniverseResponse,
   UniverseDTO,
 } from "../universe.api";
-import { buildValidUniversePayload } from "./universe-create.payload";
+import { buildInvalidUniversePayload, buildValidUniversePayload } from "./universe-create.payload";
 import { findUniverseById } from "../../../utils/db/repositories/universe.db.repository";
 import { closeDatabase } from "../../../utils/db/mongo/mongo.client";
 import { attachJsonReport } from "../../../utils/reporting/cucumber-report.helper";
@@ -38,6 +38,69 @@ When("I create a universe with full valid payload and status {word}", async (sta
 
   response = await ctx.universeApi.createUniverse(payload);
   responseBody = ((await response.json()) as CreateUniverseResponse).universe;
+});
+
+When("I create a universe with invalid name type {word}", async (type: string) => {
+  payload = buildInvalidUniversePayload("name", type) as any;
+  response = await ctx.universeApi.createUniverse(payload);
+});
+
+When("I create a universe with invalid premise type {word}", async (type: string) => {
+  payload = buildInvalidUniversePayload("premise", type) as any;
+  response = await ctx.universeApi.createUniverse(payload);
+});
+
+When("I create a universe with invalid rules type {word}", async (type: string) => {
+  payload = buildInvalidUniversePayload("rules", type) as any;
+  response = await ctx.universeApi.createUniverse(payload);
+});
+
+When("I create a universe with invalid rule item {string}", async (rawValue: string) => {
+  let invalidRuleItem: unknown;
+
+  if (rawValue === "true") invalidRuleItem = true;
+  else if (rawValue === "false") invalidRuleItem = false;
+  else if (rawValue === "null") invalidRuleItem = null;
+  else if (!Number.isNaN(Number(rawValue)) && rawValue.trim() !== "") {
+    invalidRuleItem = Number(rawValue);
+  } else {
+    invalidRuleItem = rawValue;
+  }
+
+  payload = buildValidUniversePayload({
+    rules: [invalidRuleItem as any],
+  });
+
+  response = await ctx.universeApi.createUniverse(payload);
+});
+
+When("I create a universe with empty rule value {string}", async (value: string) => {
+  payload = buildValidUniversePayload({
+    rules: [value],
+  });
+
+  response = await ctx.universeApi.createUniverse(payload);
+});
+
+When("I create a universe with duplicated rules considering case and spaces", async () => {
+  payload = buildValidUniversePayload({
+    rules: ["No cure", " no cure "],
+  });
+
+  response = await ctx.universeApi.createUniverse(payload);
+});
+
+When("I create a universe with invalid notes type {word}", async (type: string) => {
+  payload = buildInvalidUniversePayload("notes", type) as any;
+  response = await ctx.universeApi.createUniverse(payload);
+});
+
+When("I create a universe with invalid notes value {string}", async (value: string) => {
+  payload = buildValidUniversePayload({
+    notes: value,
+  });
+
+  response = await ctx.universeApi.createUniverse(payload);
 });
 
 Then("the universe create endpoint should respond with status code {int}", async (expectedStatusCode: number) => {
@@ -119,6 +182,20 @@ Then("the created universe should be stored in the database", async function () 
 
   expect(responseBody.rules ?? []).toEqual(persistedUniverse.rules ?? []);
   expect(responseBody.notes).toBe(persistedUniverse.notes);
+});
+
+Then("the universe create error message should be {string}", async function (expectedMessage: string) {
+  const body = await response.json();
+
+  await attachJsonReport(this as any, {
+    requestPayload: payload,
+    responseStatus: response.status(),
+    responseBody: body,
+  });
+
+  expect(body).toEqual({
+    error: expectedMessage,
+  });
 });
 
 AfterAll(async () => {
