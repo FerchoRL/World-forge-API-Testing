@@ -1,4 +1,4 @@
-@api @character @update
+@api @character @character-update
 Feature: Character – Update (PATCH /characters/:id)
 
   Background:

@@ -1,4 +1,4 @@
-@api @character @getById
+@api @character @character-get-by-id
 Feature: Character – Get by ID (GET /characters/:id)
 
   Background:

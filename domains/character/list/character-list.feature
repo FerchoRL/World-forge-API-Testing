@@ -1,4 +1,4 @@
-@api @character @list
+@api @character @character-list
 Feature: Character – List (GET /characters
 
   Background:

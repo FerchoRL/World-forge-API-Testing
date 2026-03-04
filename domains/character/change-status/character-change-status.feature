@@ -1,4 +1,4 @@
-@api @character @change-status
+@api @character @character-change-status
 Feature: Character – Change Status (PATCH /characters/:id/status)
 
   Background:

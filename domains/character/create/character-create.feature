@@ -1,4 +1,4 @@
-@api @character @create
+@api @character @character-create
 Feature: Character – Create (POST /characters)
 
   Background:
