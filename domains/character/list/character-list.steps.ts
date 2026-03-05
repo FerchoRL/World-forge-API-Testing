@@ -12,6 +12,41 @@ import { attachJsonReport } from "../../../utils/reporting/cucumber-report.helpe
 
 let response: APIResponse;
 let responseBodyList: ListCharactersResponse;
+let searchQueryUsedInRequest = "";
+
+/**
+ * Valida que todos los characters retornados contengan el término buscado
+ * dentro de un campo string específico (case-insensitive).
+ */
+function assertAllCharactersContainInStringField(
+  characters: CharacterDTO[],
+  search: string,
+  getFieldValue: (character: CharacterDTO) => string
+): void {
+  const normalizedSearch = search.trim().toLowerCase();
+
+  for (const character of characters) {
+    const fieldValue = getFieldValue(character).toLowerCase();
+    expect(fieldValue).toContain(normalizedSearch);
+  }
+}
+
+/**
+ * Valida que todos los characters retornados contengan el término buscado
+ * dentro de al menos un valor de un campo string[] (case-insensitive).
+ */
+function assertAllCharactersContainInStringArrayField(
+  characters: CharacterDTO[],
+  search: string,
+  getFieldValues: (character: CharacterDTO) => string[]
+): void {
+  const normalizedSearch = search.trim().toLowerCase();
+
+  for (const character of characters) {
+    const fieldValues = getFieldValues(character).map((value) => value.toLowerCase());
+    expect(fieldValues.some((value) => value.includes(normalizedSearch))).toBe(true);
+  }
+}
 
 /**
  * STEPS DE LISTADO DE PERSONAJES
@@ -29,10 +64,40 @@ When("I request the list of characters with page {int} and limit {int}", async (
   responseBodyList = (await response.json()) as ListCharactersResponse;
 });
 
+When(/^I request the list of characters with pagination parameters and search "([^"]+)"$/, async (search: string) => {
+  searchQueryUsedInRequest = search;
+  response = await ctx.characterApi.listCharacters({ page: 1, limit: 10, search });
+  responseBodyList = (await response.json()) as ListCharactersResponse;
+});
+
+When("I request the list of characters with pagination parameters and search longer than 120 characters", async () => {
+  const search = "a".repeat(121);
+  searchQueryUsedInRequest = search;
+  response = await ctx.characterApi.listCharacters({ page: 1, limit: 10, search });
+  responseBodyList = (await response.json()) as ListCharactersResponse;
+});
+
+When("I request the list of characters with pagination parameters and status {string}", async (status: string) => {
+  response = await ctx.characterApi.listCharacters({ page: 1, limit: 10, status });
+  responseBodyList = (await response.json()) as ListCharactersResponse;
+});
+
+When("I request the list of characters with page {int}, limit {int}, search {string} and status {string}", async (page: number, limit: number, search: string, status: string) => {
+  searchQueryUsedInRequest = search;
+  response = await ctx.characterApi.listCharacters({ page, limit, search, status });
+  responseBodyList = (await response.json()) as ListCharactersResponse;
+});
+
 When(/^I request the list of characters with limit (\S+)$/, async (limit: string) => {
   // Intentar parsear como número, si falla enviarlo como string
   const parsedLimit = !isNaN(Number(limit)) ? Number(limit) : limit;
   response = await ctx.characterApi.listCharacters({ limit: parsedLimit });
+  responseBodyList = (await response.json()) as ListCharactersResponse;
+});
+
+When("I request the list of characters with limit {int} and search {string}", async (limit: number, search: string) => {
+  searchQueryUsedInRequest = search;
+  response = await ctx.characterApi.listCharacters({ limit, search });
   responseBodyList = (await response.json()) as ListCharactersResponse;
 });
 
@@ -135,6 +200,109 @@ Then("the response should return a 400 error with message {string}", async funct
 
 Then("the response should return a 500 internal server error", async () => {
   await expectInternalServerError(response);
+});
+
+/**
+ * Validación semántica de búsqueda por campo específico (name).
+ *
+ * Criterio:
+ * - Se valida TODOS los resultados retornados en la página actual.
+ * - Cada character.name debe contener el término de búsqueda (case-insensitive).
+ *
+ * Nota:
+ * - Aquí no se valida status code porque ya se valida en otro Then reutilizable
+ *   del mismo escenario (paginación/shape base).
+ */
+Then("all returned characters should contain {string} in name", async function (search: string) {
+  await attachJsonReport(this as any, {
+    requestUrl: response.url(),
+    searchTerm: search,
+    results: responseBodyList.characters.map((character) => ({
+      name: character.name,
+    })),
+  });
+
+  assertAllCharactersContainInStringField(responseBodyList.characters, search, (character) => character.name);
+});
+
+Then("all returned characters should contain {string} in categories", async function (search: string) {
+  await attachJsonReport(this as any, {
+    requestUrl: response.url(),
+    searchTerm: search,
+    results: responseBodyList.characters.map((character) => ({
+      categories: character.categories,
+    })),
+  });
+
+  assertAllCharactersContainInStringArrayField(responseBodyList.characters, search, (character) => character.categories);
+});
+
+Then("all returned characters should contain {string} in identity", async function (search: string) {
+  await attachJsonReport(this as any, {
+    requestUrl: response.url(),
+    searchTerm: search,
+    results: responseBodyList.characters.map((character) => ({
+      identity: character.identity,
+    })),
+  });
+
+  assertAllCharactersContainInStringField(responseBodyList.characters, search, (character) => character.identity);
+});
+
+Then("all returned characters should contain {string} in inspirations", async function (search: string) {
+  await attachJsonReport(this as any, {
+    requestUrl: response.url(),
+    searchTerm: search,
+    results: responseBodyList.characters.map((character) => ({
+      inspirations: character.inspirations,
+    })),
+  });
+
+  assertAllCharactersContainInStringArrayField(responseBodyList.characters, search, (character) => character.inspirations);
+});
+
+Then("all returned characters should have status {string}", async function (expectedStatus: string) {
+  await attachJsonReport(this as any, {
+    requestUrl: response.url(),
+    expectedStatus,
+    results: responseBodyList.characters.map((character) => ({
+      id: character.id,
+      status: character.status,
+    })),
+  });
+
+  assertAllCharactersContainInStringField(responseBodyList.characters, expectedStatus, (character) => character.status);
+});
+
+Then("the response should match with the requested search trimmed search for {string}", async function (trimmedSearch: string) {
+  const requestUrl = response.url();
+
+  const trimmedResponse = await ctx.characterApi.listCharacters({ page: 1, limit: 10, search: trimmedSearch });
+  const trimmedBody = (await trimmedResponse.json()) as ListCharactersResponse;
+
+  const currentIds = responseBodyList.characters.map((character) => character.id);
+  const trimmedIds = trimmedBody.characters.map((character) => character.id);
+
+  await attachJsonReport(this as any, {
+    requestUrl,
+    rawSearch: searchQueryUsedInRequest,
+    requestedTrimmedSearch: trimmedSearch,
+    currentResult: {
+      total: responseBodyList.total,
+      count: responseBodyList.characters.length,
+      ids: currentIds,
+    },
+    trimmedRequestUrl: trimmedResponse.url(),
+    trimmedResult: {
+      total: trimmedBody.total,
+      count: trimmedBody.characters.length,
+      ids: trimmedIds,
+    },
+  });
+
+  expect(trimmedBody.total).toBe(responseBodyList.total);
+  expect(trimmedBody.characters.length).toBe(responseBodyList.characters.length);
+  expect(trimmedIds).toEqual(currentIds);
 });
 
 Then("each returned character should match the CharacterDTO contract", async () => {

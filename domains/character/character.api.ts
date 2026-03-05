@@ -84,12 +84,19 @@ export class CharacterApi {
     // Contexto HTTP ya configurado (baseURL, headers)
     constructor(private readonly api: APIRequestContext) { }
 
-    // Método para listar personajes, con soporte opcional de paginación
-    async listCharacters(params?: { page?: number | string; limit?: number | string }): Promise<APIResponse> {
+    // Método para listar personajes, con soporte opcional de paginación y filtros
+    async listCharacters(params?: {
+        page?: number | string;
+        limit?: number | string;
+        search?: string;
+        status?: string;
+    }): Promise<APIResponse> {
         const searchParams = new URLSearchParams()
 
         if (params?.page !== undefined) searchParams.set('page', String(params.page))
         if (params?.limit !== undefined) searchParams.set('limit', String(params.limit))
+        if (params?.search !== undefined) searchParams.set('search', String(params.search))
+        if (params?.status !== undefined) searchParams.set('status', String(params.status))
 
         const url = searchParams.size > 0
             ? `/characters?${searchParams.toString()}`
