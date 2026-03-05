@@ -53,11 +53,6 @@ Feature: Character – List (GET /characters
     When I request the list of characters with unknown query parameters
     Then the response should ignore unknown query parameters
 
-  @tc-char-list-13 @error @skip
-  Scenario: TC-CHAR-LIST-13 – Internal server error – Returns 500
-    When I request the list of characters and an internal error occurs
-    Then the response should return a 500 internal server error
-
   @tc-char-list-14 @contract
   Scenario: TC-CHAR-LIST-14 – Character list returns valid CharacterDTO structure
     When I request the list of characters without pagination parameters
