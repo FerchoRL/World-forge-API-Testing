@@ -44,3 +44,8 @@ Thumbs.db
 # Coverage (por si se agrega después)
 # ===============================
 coverage/
+
+# ===============================
+# Local test data (not committed)
+# ===============================
+tests/shared/test-data/universe-ids.local.json
