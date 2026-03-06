@@ -62,11 +62,13 @@ export type GetUniverseByIdResponse = {
 export class UniverseApi {
 	constructor(private readonly api: APIRequestContext) {}
 
-	async listUniverses(params?: { page?: number | string; limit?: number | string }): Promise<APIResponse> {
+	async listUniverses(params?: { page?: number | string; limit?: number | string; search?: string; status?: string }): Promise<APIResponse> {
 		const searchParams = new URLSearchParams()
 
 		if (params?.page !== undefined) searchParams.set('page', String(params.page))
 		if (params?.limit !== undefined) searchParams.set('limit', String(params.limit))
+		if (params?.search !== undefined) searchParams.set('search', params.search)
+		if (params?.status !== undefined) searchParams.set('status', params.status)
 
 		const url = searchParams.size > 0
 			? `/universes?${searchParams.toString()}`

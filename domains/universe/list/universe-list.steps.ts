@@ -1,3 +1,4 @@
+// ===== IMPORTS =====
 import { AfterAll, Then, When } from "@cucumber/cucumber";
 import { expect, type APIResponse } from "@playwright/test";
 import { ctx } from "../universe.common.steps";
@@ -10,6 +11,40 @@ import { VALID_STATUSES } from "../../../contracts/common/status";
 let response: APIResponse;
 let responseBodyList: ListUniversesResponse;
 
+// ===== HELPERS =====
+/**
+ * Valida que todos los universes retornados contengan el término buscado
+ * dentro de un campo string específico (case-insensitive).
+ */
+function assertAllUniversesContainInStringField(
+  universes: ListUniversesResponse["universes"],
+  search: string,
+  getFieldValue: (universe: any) => string
+): void {
+  const normalizedSearch = search.toLowerCase();
+  for (const universe of universes) {
+    const fieldValue = getFieldValue(universe).toLowerCase();
+    expect(fieldValue).toContain(normalizedSearch);
+  }
+}
+
+/**
+ * Valida que todos los universes retornados contengan el término buscado
+ * dentro de al menos un valor de un campo string[] (case-insensitive).
+ */
+function assertAllUniversesContainInStringArrayField(
+  universes: ListUniversesResponse["universes"],
+  search: string,
+  getFieldValues: (universe: any) => string[]
+): void {
+  const normalizedSearch = search.trim().toLowerCase();
+  for (const universe of universes) {
+    const fieldValues = getFieldValues(universe).map((value) => value.toLowerCase());
+    expect(fieldValues.some((value) => value.includes(normalizedSearch))).toBe(true);
+  }
+}
+
+// ===== WHEN STEPS =====
 When("I request the list of universes without pagination parameters", async () => {
   response = await ctx.universeApi.listUniverses();
   responseBodyList = (await response.json()) as ListUniversesResponse;
@@ -39,6 +74,28 @@ When("I request the list of universes with unknown query parameters", async () =
   responseBodyList = (await response.json()) as ListUniversesResponse;
 });
 
+When("I request the list of universes with pagination parameters and search longer than 120 characters", async () => {
+  const search = "a".repeat(121);
+  response = await ctx.universeApi.listUniverses({ page: 1, limit: 10, search });
+  responseBodyList = (await response.json()) as ListUniversesResponse;
+});
+
+When(/^I request the list of universes with pagination parameters and search "([^"]+)"$/, async (search: string) => {
+  response = await ctx.universeApi.listUniverses({ page: 1, limit: 10, search });
+  responseBodyList = (await response.json()) as ListUniversesResponse;
+});
+
+When("I request the list of universes with pagination parameters and status {string}", async (status: string) => {
+  response = await ctx.universeApi.listUniverses({ page: 1, limit: 10, status });
+  responseBodyList = (await response.json()) as ListUniversesResponse;
+});
+
+When("I request the list of universes with page {int}, limit {int}, search {string} and status {string}", async (page: number, limit: number, search: string, status: string) => {
+  response = await ctx.universeApi.listUniverses({ page, limit, search, status });
+  responseBodyList = (await response.json()) as ListUniversesResponse;
+});
+
+// ===== THEN STEPS =====
 Then("the universe list endpoint should respond with status code {int}", async function (expectedStatus: number) {
   await attachJsonReport(this as any, {
     requestUrl: response.url(),
@@ -192,6 +249,44 @@ Then("the universe list response error message should be {string}", async functi
 
   expect(errorBody).toHaveProperty("error");
   expect(errorBody.error).toBe(expectedMessage);
+});
+
+/**
+ * Valida que todos los universes retornados contengan el término buscado
+ * dentro de un campo string específico (case-insensitive).
+ */
+
+Then("all returned universes should contain {string} in {string}", async function (search: string, field: string) {
+  expect(responseBodyList.universes.length).toBeGreaterThan(0);
+  await attachJsonReport(this as any, {
+    requestUrl: response.url(),
+    searchTerm: search,
+    results: responseBodyList.universes.map((universe) => {
+      const result: any = { [field]: (universe as any)[field] };
+      // Solo incluimos el nombre en el reporte si no es el campo que se está validando, para evitar repetir información innecesaria.
+      if (field !== "name") {
+        result.name = universe.name;
+      }
+      return result;
+    }),
+  });
+  assertAllUniversesContainInStringField(responseBodyList.universes, search, (universe) => (universe as any)[field]);
+});
+
+Then("all returned universes should contain {string} in rules", async function (search: string) {
+  await attachJsonReport(this as any, {
+    requestUrl: response.url(),
+    searchTerm: search,
+    results: responseBodyList.universes.map((universe) => ({
+      name: universe.name,
+      rules: universe.rules,
+    })),
+  });
+  assertAllUniversesContainInStringArrayField(
+    responseBodyList.universes,
+    search,
+    (universe) => Array.isArray(universe.rules) ? universe.rules : []
+  );
 });
 
 AfterAll(async () => {
