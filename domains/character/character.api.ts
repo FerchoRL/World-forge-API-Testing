@@ -117,6 +117,10 @@ export class CharacterApi {
         })
     }
 
+    async createCharacterFromArchived(id: CharacterId): Promise<APIResponse> {
+        return this.api.post(`/characters/${id}/create-from-archived`)
+    }
+
     // Método para actualizar un personaje existente (PATCH parcial)
     async updateCharacter(id: string, updates: UpdateCharacterCoreInput): Promise<APIResponse> {
         return this.api.patch(`/characters/${id}`, {

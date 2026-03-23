@@ -1,4 +1,4 @@
-@api @universe @universe-create-from-archived @this
+@api @universe @universe-create-from-archived
 Feature: Universe - Create from archived (POST /universes/:id/create-from-archived)
 
   Background:
