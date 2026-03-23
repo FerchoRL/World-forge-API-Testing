@@ -87,6 +87,10 @@ export class UniverseApi {
 		})
 	}
 
+	async createUniverseFromArchived(id: UniverseId): Promise<APIResponse> {
+		return this.api.post(`/universes/${id}/create-from-archived`)
+	}
+
 	async updateUniverse(id: UniverseId, updates: UpdateUniverseCoreInput): Promise<APIResponse> {
 		return this.api.patch(`/universes/${id}`, {
 			data: updates,
